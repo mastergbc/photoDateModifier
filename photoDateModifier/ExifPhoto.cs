@@ -1,13 +1,14 @@
-﻿using System;
-using System.Text;
+﻿using ExifPhotoReader.Types;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Text;
 using System.Windows.Forms;
-using ExifPhotoReader.Types;
 
 namespace ExifPhotoReader
 {
-    public class ExifPhoto {
+    public class ExifPhoto
+    {
         public static ExifImageProperties GetExifDataPhoto(string path)
         {
             Image file;
@@ -113,7 +114,7 @@ namespace ExifPhotoReader
                         exifProperties.ExifOffset = Utils.getNumberValueInt64(property);
                         break;
                     case 0x829a:
-                        exifProperties.ExposureTime = (float)BitConverter.ToInt32(property.Value, 0) / (float)BitConverter.ToInt32(property.Value, 4);
+                        exifProperties.ExposureTime = BitConverter.ToInt32(property.Value, 0) / (float)BitConverter.ToInt32(property.Value, 4);
                         break;
                     case 0x829d:
                         exifProperties.FNumber = Utils.calcFnumber(property);
@@ -320,7 +321,7 @@ namespace ExifPhotoReader
                         exifProperties.GPSInfo.AltitudeRef = (AltitudeRef)Enum.ToObject(typeof(AltitudeRef), Int32.Parse(BitConverter.ToString(property.Value)));
                         break;
                     case 0x0006:
-                        exifProperties.GPSInfo.Altitude = (float)BitConverter.ToInt32(property.Value, 0) / (float)BitConverter.ToInt32(property.Value, 4);
+                        exifProperties.GPSInfo.Altitude = BitConverter.ToInt32(property.Value, 0) / (float)BitConverter.ToInt32(property.Value, 4);
                         break;
                     case 0x0007:
                         //exifProperties.GPSInfo.TimeStamp = DateTime.ParseExact(${BitConverter.ToInt32(property.Value, 0).ToString().PadLeft(2, '0')}:{BitConverter.ToInt32(property.Value, 8).ToString().PadLeft(2, '0')}:{BitConverter.ToInt32(property.Value, 16).ToString().PadLeft(2, '0')}\0, HH:mm:ss\0, System.Globalization.CultureInfo.InvariantCulture);

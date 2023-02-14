@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
 using System.Windows.Forms;
 
 namespace photoDateModifier
@@ -32,7 +32,7 @@ namespace photoDateModifier
                 width += column.Width;
             }
 
-            if(width > 1840)
+            if (width > 1840)
             {
                 width = 1840;
             }

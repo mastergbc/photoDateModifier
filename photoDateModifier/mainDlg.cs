@@ -1,32 +1,33 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.IO;
-using System.Linq;
-using System.Globalization;
-using XmpCore;
+using ExifPhotoReader;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Xmp;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json;
-using ExifPhotoReader;
+using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using XmpCore;
 
 /// <summary>
 /// Base design used exifEditor: https://1drv.ms/u/s!AmsqTf3EgmJAoZdvU1tuW0xXWl-LTA by https://happybono.wordpress.com/
-/// 
+/// The code of ExifPhotoReader was modified at my own discretion.
+///   - v1.0.4 clone by 2023.02.14: https://github.com/andersonpereiradossantos/dotnet-exif-photo-reader
 /// </summary>
 namespace photoDateModifier
 {
     public partial class mainDlg : Form, IDisposable
     {
-        private readonly object _lock = new object();
+        //private readonly object _lock = new object();
         private String m_currImageFile;
         private String m_currImageFileTemp;
         private volatile bool isAutoLoadEnabled = false;
@@ -50,7 +51,7 @@ namespace photoDateModifier
             }
             catch (Exception excep)
             {
-                MessageBox.Show("임시 파일 삭제 오류 : " + excep.Message);
+                MessageBox.Show("Deleting temporary files Error: " + excep.Message);
             }
         }
 
@@ -62,7 +63,6 @@ namespace photoDateModifier
 
                 openDialog.InitialDirectory = "g:\\Temp";
                 openDialog.Filter = "jpg files (*.jpg,*.jpeg)|*.jpg;*.jpeg";
-                //openDialog.Filter = "jpg files (*.jpg, *.jpeg)|*.jpg,*.jpeg"; //|tif files (*.tif)|*.tif|bmp files (*.bmp)|*.bmp|png files (*.png)|*.png";
                 openDialog.FilterIndex = 1;
                 openDialog.Multiselect = true;
                 openDialog.RestoreDirectory = true;
@@ -84,7 +84,7 @@ namespace photoDateModifier
         private void m_btnChooseFolder_Click(object sender, EventArgs e)
         {
             CommonOpenFileDialog dialog = new CommonOpenFileDialog();
-            dialog.IsFolderPicker = true; // true : select folder / false : select file
+            dialog.IsFolderPicker = true;
 
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
@@ -92,6 +92,217 @@ namespace photoDateModifier
                 List<string> jpegFiles = System.IO.Directory.GetFiles(dialog.FileName, "*.jpeg", SearchOption.AllDirectories).ToList();
                 fileNamesList = jpgFiles.Concat(jpegFiles).ToList();
                 m_cmbImages.DataSource = fileNamesList;
+            }
+        }
+
+        private void ShowControls(bool p)
+        {
+            m_pBImage.Visible = p;
+            m_listViewProperties.Visible = p;
+            m_btnUpdate.Visible = p;
+            m_btnUpdateAndJump.Visible = p;
+        }
+
+        private void onResize(object sender, EventArgs e)
+        {
+            Rectangle clientRect = this.ClientRectangle;
+            int sideMargin = 16;
+            int upperMargin = 43;
+            int bottomMargin = 40;
+
+            // 이미지
+            m_pBImage.Left = sideMargin;
+            m_pBImage.Top = upperMargin;
+            m_pBImage.Width = (clientRect.Width - (3 * sideMargin)) / 2;
+            m_pBImage.Height = clientRect.Height - bottomMargin - upperMargin;
+
+            // 속성
+            m_listViewProperties.Left = (clientRect.Width / 2) + (sideMargin / 2);
+            m_listViewProperties.Top = upperMargin;
+            m_listViewProperties.Width = (clientRect.Width - (3 * sideMargin)) / 2;
+            m_listViewProperties.Height = clientRect.Height - bottomMargin - upperMargin;
+
+            // 업데이트 버튼
+            m_btnUpdate.Top = clientRect.Height - 30;
+
+            // 업데이트 및 넘기기 버튼
+            m_btnUpdateAndJump.Left = m_btnUpdate.Right + sideMargin;
+            m_btnUpdateAndJump.Top = clientRect.Height - 30;
+        }
+
+        private void m_btnUpdate_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 저장된 이미지를 다시 로드합니다.
+                ShowControls(false);
+                LoadCurrImage();
+            }
+            catch (Exception excp)
+            {
+                MessageBox.Show("m_btnUpdate_Click 오류 : " + excp.Message);
+            }
+        }
+
+        private void m_btnUpdateAndJump_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                isAutoLoadEnabled = true;
+
+                if (isAutoLoadEnabled)
+                {
+                    // start loading images in sequence
+                    m_btnUpdateAndJump.Text = "Stop";
+
+                    ShowControls(false);
+                    m_pBImage.Image.Dispose();
+                    ProcessImages(fileNamesList);
+                    isAutoLoadEnabled = false;
+                    Console.Beep();
+
+                    if (m_cmbImages.InvokeRequired)
+                    {
+                        m_cmbImages.Invoke(method: (MethodInvoker)delegate
+                        {
+                            m_cmbImages.SelectedIndex = fileNamesList.Count - 1;
+                        });
+                    }
+                    else
+                    {
+                        m_cmbImages.SelectedIndex = fileNamesList.Count - 1;
+                    }
+                    m_btnUpdateAndJump.Text = "Update and Jump";
+                }
+                else
+                {
+                    // stop loading images
+                    m_btnUpdateAndJump.Text = "Update and Jump";
+                }
+            }
+            catch (Exception excp)
+            {
+                MessageBox.Show("Error m_btnUpdate_Click 오류 : " + excp.Message);
+            }
+        }
+
+        private void onChangeImageCombo(object sender, EventArgs e)
+        {
+            m_currImageFile = m_cmbImages.SelectedItem.ToString();
+            m_lblCounter.Text = Convert.ToString(m_cmbImages.SelectedIndex + 1) + " / " + m_cmbImages.Items.Count;
+            m_cmbImages.Focus();
+            LoadCurrImage();
+        }
+
+        private void m_btnLoadMetadataLog_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+
+                openFileDialog.InitialDirectory = "g:\\Temp";
+                openFileDialog.Filter = "JSON Files (*.json)|*.json";
+                openFileDialog.Title = "Select JSON File";
+                openFileDialog.Multiselect = false;
+                openFileDialog.RestoreDirectory = true;
+                openFileDialog.CheckFileExists = true;
+                openFileDialog.CheckPathExists = true;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string fileName = openFileDialog.FileName;
+
+                    // Pass the selected file name to the ViewMetadataLog method
+                    var viewMetadataLog = new ViewMetadataLog(fileName);
+                    viewMetadataLog.ShowDialog();
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show("m_btnLoadMetadataLog_Click error: " + exception.Message);
+            }
+        }
+
+        private async void ProcessImages(List<string> fileNamesList)
+        {
+            HashSet<string> processedFileNames = new HashSet<string>();
+            var tasks = new List<Task>();
+            int currKeys = 0;
+            var logFileName = "metadataModify_" + DateTime.Now.ToString("yyMMdd_HHmmdd") + ".json";
+            var logFilePath = Path.Combine(Path.GetDirectoryName(m_currImageFile), logFileName);
+            //m_currImageFile = null;
+            //m_currImageFileTemp = null;
+
+            while (currKeys < fileNamesList.Count)
+            {
+                try
+                {
+                    string currImageFile = fileNamesList[currKeys];
+                    if (!processedFileNames.Contains(currImageFile))
+                    {
+                        processedFileNames.Add(currImageFile);
+                        tasks.Add(Task.Factory.StartNew(() => LoadAndModifyImage(currImageFile, currKeys++, fileNamesList.Count)));
+                        //System.Threading.Interlocked.Increment(ref currKeys);
+                    }
+                    if (tasks.Count >= Environment.ProcessorCount)
+                    {
+                        await Task.WhenAll(tasks);
+                        tasks.Clear();
+                        Console.WriteLine(currKeys + "/" + jsonList.Count);
+                    }
+                }
+                catch (Exception exTask)
+                {
+                    Console.WriteLine("ProcessImages add tast: " + exTask.Message);
+                }
+            }
+            if (currKeys >= fileNamesList.Count)
+            {
+                currKeys = fileNamesList.Count - 1;
+            }
+            if (tasks.Count > 0)
+            {
+                try
+                {
+                    await Task.WhenAll(tasks);
+                    tasks.Clear();
+                    Console.WriteLine(currKeys + "/" + jsonList.Count);
+                }
+                catch (Exception exTask)
+                {
+                    Console.WriteLine(exTask.Message);
+                }
+            }
+            string jsonString = JsonConvert.SerializeObject(jsonList);
+            File.WriteAllText(logFilePath, jsonString);
+            currKeys = 0;
+        }
+
+        private void LoadAndModifyImage(string currImageFile, int currIndex, int listCount)
+        {
+            try
+            {
+                //lock (_lock)
+                {
+                    string tempString = Convert.ToString(currIndex + 1) + " / " + listCount;
+
+                    if (m_lblCounter.InvokeRequired)
+                    {
+                        m_lblCounter.Invoke(method: (MethodInvoker)delegate
+                        {
+                            m_lblCounter.Text = tempString;
+                        });
+                    }
+                    else
+                    {
+                        m_lblCounter.Text = tempString;
+                    }
+                    LoadCurrImage(currImageFile, currIndex);
+                }// end of lock
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("LoadAndModifyImage add tast: " + ex.Message);
             }
         }
 
@@ -212,7 +423,6 @@ namespace photoDateModifier
                     //Save image part
                     var jsonLog = new MetadataModifyLog();
                     jsonLog.Number = currIndex;
-                    //SaveMetadataImage(currImageFileTemp, cloneImages, imageMetadata, imageDescription, ref jsonLog);
                     var dateTimeBytes = _Encoding.GetBytes(imageMetadata.earliestDate.ToString("yyyy:MM:dd HH:mm:ss\0"));
                     try
                     {
@@ -341,26 +551,35 @@ namespace photoDateModifier
                         }
 
                         ///FileInfo Save
-                        try
+                        bool fileInfoSaved = false;
+                        while (!fileInfoSaved)
                         {
-                            if (imageMetadata.fileCreationTime != imageMetadata.earliestDate)
+                            try
                             {
-                                File.SetCreationTime(currImageFile, imageMetadata.earliestDate);
-                            }
+                                lock (currImageFile)
+                                {
+                                    if (imageMetadata.fileCreationTime != imageMetadata.earliestDate)
+                                    {
+                                        File.SetCreationTime(currImageFile, imageMetadata.earliestDate);
+                                    }
 
-                            if (imageMetadata.fileLastWriteTime != imageMetadata.earliestDate)
-                            {
-                                File.SetLastWriteTime(currImageFile, imageMetadata.earliestDate);
-                            }
+                                    if (imageMetadata.fileLastWriteTime != imageMetadata.earliestDate)
+                                    {
+                                        File.SetLastWriteTime(currImageFile, imageMetadata.earliestDate);
+                                    }
 
-                            if (imageMetadata.fileLastAccessTime != imageMetadata.earliestDate)
-                            {
-                                File.SetLastAccessTime(currImageFile, imageMetadata.earliestDate);
+                                    if (imageMetadata.fileLastAccessTime != imageMetadata.earliestDate)
+                                    {
+                                        File.SetLastAccessTime(currImageFile, imageMetadata.earliestDate);
+                                    }
+                                    fileInfoSaved = true;
+                                }
                             }
-                        }
-                        catch (Exception exfile)
-                        {
-                            MessageBox.Show("Error SaveFileInfo: " + exfile.InnerException + exfile.Message + currImageFile);
+                            catch (IOException)
+                            {
+                                // Wait for a moment and try again
+                                System.Threading.Thread.Sleep(1);
+                            }
                         }
 
                     }
@@ -426,15 +645,23 @@ namespace photoDateModifier
                 if (match.Success)
                 {
                     string dateString = match.Value;
-                    imageMetadata.folderNameDateTime = DateTime.ParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture);
-                    row = new ListViewItem(0xff01.ToString("X4"));
-                    row.SubItems.Add("FolderName DateTime");
-                    row.SubItems.Add(imageMetadata.folderNameDateTime.ToString());// 파일로서의 생성 시간 (복사하면 갱신됨)
-                    row.SubItems.Add("Unedited");
-                    m_listViewProperties.Items.Add(row);
-                    if (!imageDescription.Contains("afstFoDT"))
+                    DateTime.TryParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime);
+                    imageMetadata.folderNameDateTime = dateTime;
+                    if (imageMetadata.folderNameDateTime != DateTime.MinValue)
                     {
-                        imageDescription += ",afstFoDT"; // 파일이름에서 날짜를 추론한 태그
+                        if (!imageDescription.Contains("afstFoDT"))
+                        {
+                            imageDescription += ",afstFoDT"; // 폴더이름에서 날짜를 추론한 태그
+                        }
+                        row = new ListViewItem(0xff01.ToString("X4"));
+                        row.SubItems.Add("FolderName DateTime");
+                        row.SubItems.Add(imageMetadata.folderNameDateTime.ToString());
+                        row.SubItems.Add("Unedited");
+                        m_listViewProperties.Items.Add(row);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Parsing fail. Date not found in folder name.");
                     }
                 }
                 else
@@ -448,21 +675,23 @@ namespace photoDateModifier
                 {
                     string dateString = match.Groups[1].Value;
                     string timeString = match.Groups[2].Value;
-                    imageMetadata.fileNameDateTime = new DateTime(
-                        int.Parse(dateString.Substring(0, 4)),
-                        int.Parse(dateString.Substring(4, 2)),
-                        int.Parse(dateString.Substring(6, 2)),
-                        int.Parse(timeString.Substring(0, 2)),
-                        int.Parse(timeString.Substring(2, 2)),
-                        int.Parse(timeString.Substring(4, 2)));
-                    row = new ListViewItem(0xff02.ToString("X4"));
-                    row.SubItems.Add("FileName DateTime");
-                    row.SubItems.Add(imageMetadata.fileNameDateTime.ToString());// 파일로서의 생성 시간 (복사하면 갱신됨)
-                    row.SubItems.Add("Unedited");
-                    m_listViewProperties.Items.Add(row);
-                    if (!imageDescription.Contains("afstFiDT"))
+                    DateTime.TryParseExact(dateString + timeString, "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime);
+                    imageMetadata.fileNameDateTime = dateTime;
+                    if (imageMetadata.fileNameDateTime != DateTime.MinValue)
                     {
-                        imageDescription += ",afstFiDT"; // 파일이름에서 날짜를 추론한 태그
+                        if (!imageDescription.Contains("afstFiDT"))
+                        {
+                            imageDescription += ",afstFiDT"; // 파일이름에서 날짜를 추론한 태그
+                        }
+                        row = new ListViewItem(0xff02.ToString("X4"));
+                        row.SubItems.Add("FileName DateTime");
+                        row.SubItems.Add(imageMetadata.fileNameDateTime.ToString());
+                        row.SubItems.Add("Unedited");
+                        m_listViewProperties.Items.Add(row);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Parsing fail. Date not found in file name.");
                     }
                 }
                 else
@@ -725,11 +954,16 @@ namespace photoDateModifier
                 //   folderNameDateTime uses only year, month, and day.
                 //   Date difference within 15 days based on folderNameDateTime is ignored.
                 string pattern = @"\d{8}";
-                Match match = Regex.Match(imageMetadata.fileName, pattern);
+                Match match = Regex.Match(imageMetadata.folderName, pattern);
                 if (match.Success)
                 {
                     string dateString = match.Value;
-                    imageMetadata.folderNameDateTime = DateTime.ParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture);
+                    DateTime.TryParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime);
+                    imageMetadata.folderNameDateTime = dateTime;
+                    if(imageMetadata.folderNameDateTime == DateTime.MinValue)
+                    {
+                        Console.WriteLine("Parsing fail. Date not found in folder name.");
+                    }
                     if (!imageDescription.Contains("afstFoDT"))
                     {
                         imageDescription += ",afstFoDT"; // 파일이름에서 날짜를 추론한 태그
@@ -746,13 +980,12 @@ namespace photoDateModifier
                 {
                     string dateString = match.Groups[1].Value;
                     string timeString = match.Groups[2].Value;
-                    imageMetadata.fileNameDateTime = new DateTime(
-                        int.Parse(dateString.Substring(0, 4)),
-                        int.Parse(dateString.Substring(4, 2)),
-                        int.Parse(dateString.Substring(6, 2)),
-                        int.Parse(timeString.Substring(0, 2)),
-                        int.Parse(timeString.Substring(2, 2)),
-                        int.Parse(timeString.Substring(4, 2)));
+                    DateTime.TryParseExact(dateString + timeString, "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime);
+                    imageMetadata.fileNameDateTime = dateTime;
+                    if (imageMetadata.fileNameDateTime == DateTime.MinValue)
+                    {
+                        Console.WriteLine("Parsing fail. Date not found in file name.");
+                    }
                     if (!imageDescription.Contains("afstFiDT"))
                     {
                         imageDescription += ",afstFiDT"; // 파일이름에서 날짜를 추론한 태그
@@ -836,186 +1069,8 @@ namespace photoDateModifier
             }
             catch (Exception excep)
             {
-                MessageBox.Show("Error LoadMetaData: " + excep.Message + fileInfo.FullName);
+                MessageBox.Show("Error LoadMetaData Temp: " + excep.Message + fileInfo.FullName);
                 throw;
-            }
-        }
-
-        private void SaveMetadataImage(string currImageFile, Image images, ImageMetadata imageMetadata,
-                                       string imageDescription, ref MetadataModifyLog jsonLog)
-        {
-            Encoding _Encoding = Encoding.UTF8;
-            PropertyItem[] propItems = images.PropertyItems;
-            var dateTimeBytes = _Encoding.GetBytes(imageMetadata.earliestDate.ToString("yyyy:MM:dd HH:mm:ss\0"));
-            try
-            {
-                jsonLog.FolderName = imageMetadata.folderName;
-                jsonLog.FileName = imageMetadata.fileName;
-                jsonLog.FilenameDateTime = imageMetadata.fileNameDateTime;
-                jsonLog.FoldernameDateTime = imageMetadata.folderNameDateTime;
-                jsonLog.EarliestDate = imageMetadata.earliestDate;
-                jsonLog.DateAcquired = imageMetadata.xmpDateAcquiredTime;
-
-                DateTime previousDateTime = imageMetadata.exifDateTime;
-                if (imageMetadata.exifDateTime != imageMetadata.earliestDate)
-                {
-                    PropertyItem dateTimePropertyItem = propItems.FirstOrDefault(p => p.Id == (int)ExifTags.dateTimeTag);
-                    if (dateTimePropertyItem != null)
-                    {
-                        var temp = Encoding.UTF8.GetString(dateTimePropertyItem.Value).TrimEnd('\0');
-                        // DateTime.TryParse(temp, out previousDateTime) 구문으로 파싱되지 않는데 이유를 모르겠다...
-                        DateTime.TryParseExact(temp, "yyyy:MM:dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out previousDateTime);
-                    }
-                    else
-                    {
-                        dateTimePropertyItem = (PropertyItem)Activator.CreateInstance(typeof(PropertyItem), true);
-                        dateTimePropertyItem.Id = (int)ExifTags.dateTimeTag;
-                        dateTimePropertyItem.Type = 2;
-                        dateTimePropertyItem.Len = 20;
-                    }
-                    dateTimePropertyItem.Value = dateTimeBytes;
-                    images.SetPropertyItem(dateTimePropertyItem);
-                }
-                jsonLog.BeforeDateTime = previousDateTime;
-                jsonLog.AfterDateTime = imageMetadata.earliestDate;
-
-                DateTime previousDateTimeOriginal = imageMetadata.exifDateTimeOriginal;
-                if (imageMetadata.exifDateTimeOriginal != imageMetadata.earliestDate)
-                {
-                    PropertyItem dateTimeOriginalPropertyItem = propItems.FirstOrDefault(p => p.Id == (int)ExifTags.dateTimeOriginalTag);
-                    if (dateTimeOriginalPropertyItem != null)
-                    {
-                        var temp = Encoding.UTF8.GetString(dateTimeOriginalPropertyItem.Value).TrimEnd('\0');
-                        DateTime.TryParseExact(temp, "yyyy:MM:dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out previousDateTimeOriginal);
-                    }
-                    else
-                    {
-                        dateTimeOriginalPropertyItem = (PropertyItem)Activator.CreateInstance(typeof(PropertyItem), true);
-                        dateTimeOriginalPropertyItem.Id = (int)ExifTags.dateTimeOriginalTag;
-                        dateTimeOriginalPropertyItem.Type = 2;
-                        dateTimeOriginalPropertyItem.Len = 20;
-                    }
-                    dateTimeOriginalPropertyItem.Value = dateTimeBytes;
-                    images.SetPropertyItem(dateTimeOriginalPropertyItem);
-                }
-                jsonLog.BeforeDateTimeOriginal = previousDateTimeOriginal;
-                jsonLog.AfterDateTimeOriginal = imageMetadata.earliestDate;
-
-                DateTime previousDateTimeDigitized = imageMetadata.exifDateTimeDigitized;
-                if (imageMetadata.exifDateTimeDigitized != imageMetadata.earliestDate)
-                {
-                    PropertyItem dateTimeDigitizedPropertyItem = propItems.FirstOrDefault(p => p.Id == (int)ExifTags.dateTimeDigitizedTag);
-                    if (dateTimeDigitizedPropertyItem != null)
-                    {
-                        var temp = Encoding.UTF8.GetString(dateTimeDigitizedPropertyItem.Value).TrimEnd('\0');
-                        DateTime.TryParseExact(temp, "yyyy:MM:dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out previousDateTimeDigitized);
-                    }
-                    else
-                    {
-                        dateTimeDigitizedPropertyItem = (PropertyItem)Activator.CreateInstance(typeof(PropertyItem), true);
-                        dateTimeDigitizedPropertyItem.Id = (int)ExifTags.dateTimeDigitizedTag;
-                        dateTimeDigitizedPropertyItem.Type = 2;
-                        dateTimeDigitizedPropertyItem.Len = 20;
-                    }
-                    dateTimeDigitizedPropertyItem.Value = dateTimeBytes;
-                    images.SetPropertyItem(dateTimeDigitizedPropertyItem);
-                }
-                jsonLog.BeforeDateTimeDigitized = previousDateTimeDigitized;
-                jsonLog.AfterDateTimeDigitized = imageMetadata.earliestDate;
-
-                string previousImageDescription = imageMetadata.imageDescriptionTemp;
-                if (imageDescription == null)
-                {
-                    // No change
-                }
-                else if (imageMetadata.imageDescriptionTemp == null || !imageDescription.Equals(imageMetadata.imageDescriptionTemp))
-                {
-                    PropertyItem imageDescriptionPropertyItem = propItems.FirstOrDefault(p => p.Id == (int)ExifTags.imageDescriptionTag);
-                    var imageDescriptionVal = _Encoding.GetBytes(imageDescription.ToString() + "\0");
-                    if (imageDescriptionPropertyItem != null)
-                    {
-                        // previousImageDescription = _Encoding.GetString(imageDescriptionPropertyItem.Value).TrimEnd('\0');
-                    }
-                    else
-                    {
-                        imageDescriptionPropertyItem = (PropertyItem)Activator.CreateInstance(typeof(PropertyItem), true);
-                        imageDescriptionPropertyItem.Id = (int)ExifTags.imageDescriptionTag;
-                        imageDescriptionPropertyItem.Type = 2;
-                        imageDescriptionPropertyItem.Len = imageDescription.Length + 1;
-                    }
-                    imageDescriptionPropertyItem.Value = imageDescriptionVal;
-                    images.SetPropertyItem(imageDescriptionPropertyItem);
-
-                }
-                jsonLog.BeforeImageDescription = previousImageDescription;
-                jsonLog.AfterImageDescription = imageDescription;
-
-                //update fileinfo property
-                jsonLog.BeforeCreationTime = imageMetadata.fileCreationTime;
-                jsonLog.AfterCreationTime = imageMetadata.earliestDate;
-                jsonLog.BeforeLastWriteTime = imageMetadata.fileLastWriteTime;
-                jsonLog.AfterLastWriteTime = imageMetadata.earliestDate;
-                jsonLog.BeforeLastAccessTime = imageMetadata.fileLastAccessTime;
-                jsonLog.AfterLastAccessTime = imageMetadata.earliestDate;
-
-                bool fileSaved = false;
-                while (!fileSaved)
-                {
-                    try
-                    {
-                        images.Save(currImageFile, ImageFormat.Jpeg);// xmpDirectory metadata가 유실된다.
-                        fileSaved = true;
-                    }
-                    catch (IOException)
-                    {
-                        // Wait for a moment and try again
-                        System.Threading.Thread.Sleep(1);
-                    }
-                }
-            }
-            catch (Exception excep)
-            {
-                MessageBox.Show("Error SaveMetadata: " + excep.Message);
-            }
-        }
-
-        private void SaveFileInfo(string currImageFile, FileStream fileStream, FileInfo fileInfo, ImageMetadata imageMetadata)
-        {
-            try
-            {
-                if (imageMetadata.fileCreationTime != imageMetadata.earliestDate)
-                {
-                    File.SetCreationTime(currImageFile, imageMetadata.earliestDate);
-                }
-
-                if (imageMetadata.fileLastWriteTime != imageMetadata.earliestDate)
-                {
-                    File.SetLastWriteTime(currImageFile, imageMetadata.earliestDate);
-                }
-
-                if (imageMetadata.fileLastAccessTime != imageMetadata.earliestDate)
-                {
-                    File.SetLastAccessTime(currImageFile, imageMetadata.earliestDate);
-                }
-                File.SetCreationTime(currImageFile, imageMetadata.earliestDate);
-                bool fileUnlocked = false;
-                while (!fileUnlocked)
-                {
-                    try
-                    {
-                        fileStream.Close();
-                        fileUnlocked = true;
-                    }
-                    catch (IOException)
-                    {
-                        // Wait for a short time before trying again
-                        System.Threading.Thread.Sleep(1);
-                    }
-                }
-            }
-            catch (Exception excep)
-            {
-                MessageBox.Show("Error SaveFileInfo: " + excep.Message + currImageFile);
             }
         }
 
@@ -1055,218 +1110,6 @@ namespace photoDateModifier
                 {
                     return 0;
                 }
-            }
-        }
-
-        private void ShowControls(bool p)
-        {
-            m_pBImage.Visible = p;
-            m_listViewProperties.Visible = p;
-            m_btnUpdate.Visible = p;
-            m_btnUpdateAndJump.Visible = p;
-        }
-
-        private void onResize(object sender, EventArgs e)
-        {
-            Rectangle clientRect = this.ClientRectangle;
-            int sideMargin = 16;
-            int upperMargin = 43;
-            int bottomMargin = 40;
-
-            // 이미지
-            m_pBImage.Left = sideMargin;
-            m_pBImage.Top = upperMargin;
-            m_pBImage.Width = (clientRect.Width - (3 * sideMargin)) / 2;
-            m_pBImage.Height = clientRect.Height - bottomMargin - upperMargin;
-
-            // 속성
-            m_listViewProperties.Left = (clientRect.Width / 2) + (sideMargin / 2);
-            m_listViewProperties.Top = upperMargin;
-            m_listViewProperties.Width = (clientRect.Width - (3 * sideMargin)) / 2;
-            m_listViewProperties.Height = clientRect.Height - bottomMargin - upperMargin;
-
-            // 업데이트 버튼
-            m_btnUpdate.Top = clientRect.Height - 30;
-
-            // 업데이트 및 넘기기 버튼
-            m_btnUpdateAndJump.Left = m_btnUpdate.Right + sideMargin;
-            m_btnUpdateAndJump.Top = clientRect.Height - 30;
-        }
-
-        private void m_btnUpdate_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                // 저장된 이미지를 다시 로드합니다.
-                ShowControls(false);
-                LoadCurrImage();
-            }
-            catch (Exception excp)
-            {
-                MessageBox.Show("m_btnUpdate_Click 오류 : " + excp.Message);
-            }
-        }
-
-        private void m_btnUpdateAndJump_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                isAutoLoadEnabled = true;
-
-                if (isAutoLoadEnabled)
-                {
-                    // start loading images in sequence
-                    m_btnUpdateAndJump.Text = "Stop";
-
-                    ShowControls(false);
-                    m_pBImage.Image.Dispose();
-                    ProcessImages(fileNamesList);
-                    isAutoLoadEnabled = false;
-                    Console.Beep();
-
-                    if (m_cmbImages.InvokeRequired)
-                    {
-                        m_cmbImages.Invoke(method: (MethodInvoker)delegate
-                        {
-                            m_cmbImages.SelectedIndex = fileNamesList.Count - 1;
-                        });
-                    }
-                    else
-                    {
-                        m_cmbImages.SelectedIndex = fileNamesList.Count - 1;
-                    }
-                    ShowControls(true);
-                    m_btnUpdateAndJump.Text = "Update and Jump";
-                }
-                else
-                {
-                    // stop loading images
-                    m_btnUpdateAndJump.Text = "Update and Jump";
-                }
-            }
-            catch (Exception excp)
-            {
-                MessageBox.Show("Error m_btnUpdate_Click 오류 : " + excp.Message);
-            }
-        }
-
-        private async void ProcessImages(List<string> fileNamesList)
-        {
-            HashSet<string> processedFileNames = new HashSet<string>();
-            var tasks = new List<Task>();
-            int currKeys = 0;
-            var logFileName = "metadataModify_" + DateTime.Now.ToString("yyMMdd_HHmmdd") + ".json";
-            var logFilePath = Path.Combine(Path.GetDirectoryName(m_currImageFile), logFileName);
-            m_currImageFile = null;
-            m_currImageFileTemp = null;
-
-            while (currKeys < fileNamesList.Count)
-            {
-                try
-                {
-                    string currImageFile = fileNamesList[currKeys];
-                    if (!processedFileNames.Contains(currImageFile))
-                    {
-                        processedFileNames.Add(currImageFile);
-                        tasks.Add(Task.Factory.StartNew(() => LoadAndModifyImage(currImageFile, currKeys++, fileNamesList.Count)));
-                        //System.Threading.Interlocked.Increment(ref currKeys);
-                    }
-                    if (tasks.Count >= Environment.ProcessorCount)
-                    {
-                        await Task.WhenAll(tasks);
-                        tasks.Clear();
-                        Console.WriteLine(currKeys + "/" + jsonList.Count);
-                    }
-                }
-                catch (Exception exTask)
-                {
-                    Console.WriteLine("ProcessImages add tast: " + exTask.Message);
-                }
-            }
-            if (currKeys >= fileNamesList.Count)
-            {
-                currKeys = fileNamesList.Count - 1;
-            }
-            if (tasks.Count > 0)
-            {
-                try
-                {
-                    await Task.WhenAll(tasks);
-                    tasks.Clear();
-                    Console.WriteLine(currKeys + "/" + jsonList.Count);
-                }
-                catch(Exception exTask)
-                {
-                    Console.WriteLine(exTask.Message);
-                }
-            }
-            string jsonString = JsonConvert.SerializeObject(jsonList);
-            File.WriteAllText(logFilePath, jsonString);
-            currKeys = 0;
-        }
-
-        private void LoadAndModifyImage(string currImageFile, int currIndex, int listCount)
-        {
-            try
-            {
-                //lock (_lock)
-                {
-                    string tempString = Convert.ToString(currIndex + 1) + " / " + listCount;
-
-                    if (m_lblCounter.InvokeRequired)
-                    {
-                        m_lblCounter.Invoke(method: (MethodInvoker)delegate
-                        {
-                            m_lblCounter.Text = tempString;
-                        });
-                    }
-                    else
-                    {
-                        m_lblCounter.Text = tempString;
-                    }
-                    LoadCurrImage(currImageFile, currIndex);
-                }// end of lock
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("LoadAndModifyImage add tast: " + ex.Message);
-            }
-        }
-
-        private void onChangeImageCombo(object sender, EventArgs e)
-        {
-            m_currImageFile = m_cmbImages.SelectedItem.ToString();
-            m_lblCounter.Text = Convert.ToString(m_cmbImages.SelectedIndex + 1) + " / " + m_cmbImages.Items.Count;
-            m_cmbImages.Focus();
-            LoadCurrImage();
-        }
-
-        private void m_btnLoadMetadataLog_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                OpenFileDialog openFileDialog = new OpenFileDialog();
-
-                openFileDialog.InitialDirectory = "g:\\Temp";
-                openFileDialog.Filter = "JSON Files (*.json)|*.json";
-                openFileDialog.Title = "Select JSON File";
-                openFileDialog.Multiselect = false;
-                openFileDialog.RestoreDirectory = true;
-                openFileDialog.CheckFileExists = true;
-                openFileDialog.CheckPathExists = true;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    string fileName = openFileDialog.FileName;
-
-                    // Pass the selected file name to the ViewMetadataLog method
-                    var viewMetadataLog = new ViewMetadataLog(fileName);
-                    viewMetadataLog.ShowDialog();
-                }
-            }
-            catch (Exception exception)
-            {
-                MessageBox.Show("m_btnLoadMetadataLog_Click error: " + exception.Message);
             }
         }
     }

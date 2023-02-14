@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Imaging;
-using System.Text;
 
 namespace ExifPhotoReader.Types
 {
@@ -105,7 +103,7 @@ namespace ExifPhotoReader.Types
         MagneticNorth = 'M',
         [Description("True North")]
         TrueNorth = 'T'
-    }    
+    }
     public enum ImgDirectionRef
     {
         [Description("Magnetic North")]

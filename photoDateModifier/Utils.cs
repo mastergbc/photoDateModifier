@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing.Imaging;
-using System.Text;
 using System.Globalization;
+using System.Text;
 using System.Windows.Forms;
 
 namespace ExifPhotoReader
@@ -15,7 +15,7 @@ namespace ExifPhotoReader
             {
                 if (property.Value.Length >= 4)
                 {
-                    tempNo = (float)BitConverter.ToInt32(property.Value, 0) / (float)BitConverter.ToInt32(property.Value, 4);
+                    tempNo = BitConverter.ToInt32(property.Value, 0) / (float)BitConverter.ToInt32(property.Value, 4);
                 }
                 else
                 {
@@ -39,7 +39,7 @@ namespace ExifPhotoReader
             {
                 if (property.Value.Length >= 4)
                 {
-                    tempNo = (float)Math.Pow(2, Math.Abs(((float)BitConverter.ToInt32(property.Value, 0)) / (float)BitConverter.ToInt32(property.Value, 4)));
+                    tempNo = (float)Math.Pow(2, Math.Abs(BitConverter.ToInt32(property.Value, 0) / (float)BitConverter.ToInt32(property.Value, 4)));
                 }
                 else
                 {
@@ -61,7 +61,6 @@ namespace ExifPhotoReader
             var temp = Encoding.UTF8.GetString(property.Value).TrimEnd('\0');
             DateTime.TryParseExact(temp, "yyyy:MM:dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime);
             return dateTime;
-            //return DateTime.ParseExact(new ASCIIEncoding().GetString(property.Value), format, System.Globalization.CultureInfo.InvariantCulture);
         }
 
         public static int getNumberValueInt32(PropertyItem property, int position = 0)
@@ -129,7 +128,7 @@ namespace ExifPhotoReader
 
                 return tempNo;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show("getNumberValueInt64 Error : " + ex.Message + property.Id + ": " + tempNo);
                 throw;

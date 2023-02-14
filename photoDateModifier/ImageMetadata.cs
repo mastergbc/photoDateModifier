@@ -96,7 +96,7 @@ namespace photoDateModifier
                 earliestDate = xmpDateAcquiredTime;
                 flagValue = true;
             }
-            // Compare fileNameDateTime, the date inferred from the file name, with earliestDate at the first.
+
             if (fileNameDateTime.Ticks > 0 && fileNameDateTime.Year > 1970 && fileNameDateTime < earliestDate)
             {
                 earliestDate = new DateTime(fileNameDateTime.Year, fileNameDateTime.Month, fileNameDateTime.Day, fileNameDateTime.Hour, fileNameDateTime.Minute, fileNameDateTime.Second);
