@@ -36,7 +36,7 @@ System.Text.RegularExpressions
 If you would like to contribute to the development of the program, please open a pull request on the [GitHub repository](httPs://https://github.com/mastergbc/photoDateModifier).
 
 ## License
-The program is licensed under the MIT license. See the [LICENSE](LICENSE) file for more details.
+The program is licensed under the MIT license. See the [LICENSE](https://github.com/mastergbc/photoDateModifier/blob/master/LICENCE) file for more details.
 
 ## Acknowledgments
 Base design used exifEditor: https://1drv.ms/u/s!AmsqTf3EgmJAoZdvU1tuW0xXWl-LTA by https://happybono.wordpress.com/
