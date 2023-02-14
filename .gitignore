@@ -12,6 +12,12 @@
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
+*.DRC
+*.DSNlck
+*.ONL
+*.DBK
+*.opj
+*.gbc4a
 
 # Build results
 [Dd]ebug/
