@@ -960,7 +960,7 @@ namespace photoDateModifier
                     string dateString = match.Value;
                     DateTime.TryParseExact(dateString, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime);
                     imageMetadata.folderNameDateTime = dateTime;
-                    if(imageMetadata.folderNameDateTime == DateTime.MinValue)
+                    if (imageMetadata.folderNameDateTime == DateTime.MinValue)
                     {
                         Console.WriteLine("Parsing fail. Date not found in folder name.");
                     }

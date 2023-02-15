@@ -8,31 +8,80 @@ namespace ExifPhotoReader
 {
     class Utils
     {
-        public static float calcFnumber(PropertyItem property)
+        public static T GetEnumObjectString<T>(PropertyItem property)
         {
-            float tempNo = 0;
+            ASCIIEncoding encoding = new ASCIIEncoding();
+            T tempObject = default(T);
+            try
+            {
+                if (property.Value != null)
+                {
+                    tempObject = (T)Enum.ToObject(typeof(T), encoding.GetString(property.Value));
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"GetEnumObjectString Error : {ex.Message} {property.Id}: {tempObject}");
+                throw;
+            }
+            return tempObject;
+        }
+
+        public static T GetEnumObjectInt16<T>(PropertyItem property)
+        {
+            T tempObject = default(T);
+            try
+            {
+                if (property.Value.Length >= 2)
+                {
+                    tempObject = (T)Enum.ToObject(typeof(T), BitConverter.ToInt16(property.Value, 0));
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"GetEnumObjectInt16 Error : {ex.Message} {property.Id}: {tempObject}");
+                throw;
+            }
+            return tempObject;
+        }
+
+        public static T GetEnumObjectInt32<T>(PropertyItem property)
+        {
+            T tempObject = default(T);
             try
             {
                 if (property.Value.Length >= 4)
                 {
-                    tempNo = BitConverter.ToInt32(property.Value, 0) / (float)BitConverter.ToInt32(property.Value, 4);
+                    tempObject = (T)Enum.ToObject(typeof(T), Int32.Parse(BitConverter.ToString(property.Value)));
                 }
-                else
-                {
-                    // handle the error or provide alternative logic for arrays with insufficient length
-                    tempNo = 0;
-                }
-
-                return tempNo;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("calcFnumber Error : " + ex.Message + property.Id + ": " + tempNo);
+                MessageBox.Show($"GetEnumObjectInt16 Error : {ex.Message} {property.Id}: {tempObject}");
                 throw;
             }
+            return tempObject;
         }
 
-        public static float calcShutterSpeedValue(PropertyItem property)
+        public static float GetCalcFloatingNumber(PropertyItem property)
+        {
+            float tempNo = 0;
+            try
+            {
+                if (property.Value.Length >= 8)
+                {
+                    tempNo = BitConverter.ToInt32(property.Value, 0) / (float)BitConverter.ToInt32(property.Value, 4);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"GetCalcFloatingNumber Error : {ex.Message} {property.Id}: {tempNo}");
+                throw;
+            }
+            return tempNo;
+        }
+
+        public static float GetCalcShutterSpeedValue(PropertyItem property)
         {
             float tempNo = 0;
             try
@@ -41,29 +90,23 @@ namespace ExifPhotoReader
                 {
                     tempNo = (float)Math.Pow(2, Math.Abs(BitConverter.ToInt32(property.Value, 0) / (float)BitConverter.ToInt32(property.Value, 4)));
                 }
-                else
-                {
-                    // handle the error or provide alternative logic for arrays with insufficient length
-                    tempNo = 0;
-                }
-
-                return tempNo;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("calcShutterSpeedValue Error : " + ex.Message + property.Id + ": " + tempNo);
+                MessageBox.Show($"GetCalcShutterSpeedValue Error : {ex.Message} {property.Id}: {tempNo}");
                 throw;
             }
+            return tempNo;
         }
 
-        public static DateTime convertDateTime(PropertyItem property, string format)
+        public static DateTime GetConvertedDateTime(PropertyItem property, string format)
         {
             var temp = Encoding.UTF8.GetString(property.Value).TrimEnd('\0');
             DateTime.TryParseExact(temp, "yyyy:MM:dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime);
             return dateTime;
         }
 
-        public static int getNumberValueInt32(PropertyItem property, int position = 0)
+        public static int GetNumberValueInt32(PropertyItem property, int position = 0)
         {
             int tempNo = 0;
             try
@@ -72,22 +115,16 @@ namespace ExifPhotoReader
                 {
                     tempNo = BitConverter.ToInt32(property.Value, position);
                 }
-                else
-                {
-                    // handle the error or provide alternative logic for arrays with insufficient length
-                    tempNo = 0;
-                }
-
-                return tempNo;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("getNumberValueInt32 Error : " + ex.Message + property.Id + ": " + tempNo);
+                MessageBox.Show($"GetNumberValueInt32 Error : {ex.Message} {property.Id}: {tempNo}");
                 throw;
             }
+            return tempNo;
         }
 
-        public static short getNumberValueInt16(PropertyItem property, int position = 0)
+        public static short GetNumberValueInt16(PropertyItem property, int position = 0)
         {
             short tempNo = 0;
             try
@@ -96,22 +133,16 @@ namespace ExifPhotoReader
                 {
                     tempNo = BitConverter.ToInt16(property.Value, position);
                 }
-                else
-                {
-                    // handle the error or provide alternative logic for arrays with insufficient length
-                    tempNo = 0;
-                }
-
-                return tempNo;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("getNumberValueInt16 Error : " + ex.Message + property.Id + ": " + tempNo);
+                MessageBox.Show($"GetNumberValueInt16 Error : {ex.Message} {property.Id}: {tempNo}");
                 throw;
             }
+            return tempNo;
         }
 
-        public static long getNumberValueInt64(PropertyItem property, int position = 0)
+        public static long GetNumberValueInt64(PropertyItem property, int position = 0)
         {
             long tempNo = 0;
             try
@@ -120,22 +151,16 @@ namespace ExifPhotoReader
                 {
                     tempNo = BitConverter.ToInt64(property.Value, position);
                 }
-                else
-                {
-                    // handle the error or provide alternative logic for arrays with insufficient length
-                    tempNo = 0;
-                }
-
-                return tempNo;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("getNumberValueInt64 Error : " + ex.Message + property.Id + ": " + tempNo);
+                MessageBox.Show($"GetNumberValueInt64 Error : {ex.Message} {property.Id}: {tempNo}");
                 throw;
             }
+            return tempNo;
         }
 
-        public static float getNumberValueFloat(PropertyItem property, int position = 0)
+        public static float GetNumberValueFloat(PropertyItem property, int position = 0)
         {
             float tempNo = 0;
             try
@@ -144,35 +169,31 @@ namespace ExifPhotoReader
                 {
                     tempNo = BitConverter.ToInt32(property.Value, position);
                 }
-                else
-                {
-                    // handle the error or provide alternative logic for arrays with insufficient length
-                    tempNo = 0;
-                }
-
-                return tempNo;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("getNumberValueFloat Error : " + ex.Message + property.Id + ": " + tempNo);
+                MessageBox.Show($"GetNumberValueFloat Error : {ex.Message} {property.Id}: {tempNo}");
                 throw;
             }
+            return tempNo;
         }
 
-        public static string getStringValue(PropertyItem property)
+        public static string GetStringValue(PropertyItem property)
         {
             string tempString = "";
             try
             {
-                tempString = new ASCIIEncoding().GetString(property.Value);
-
-                return tempString;
+                if (property.Value != null)
+                {
+                    tempString = new ASCIIEncoding().GetString(property.Value);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("getStringValue Error : " + ex.Message + property.Id + ": " + tempString);
+                MessageBox.Show($"GetStringValue Error : {ex.Message} {property.Id}: {tempString}");
                 throw;
             }
+            return tempString;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Drawing.Imaging;
+using System.Windows.Forms;
 
 namespace ExifPhotoReader.Types
 {
@@ -41,22 +42,33 @@ namespace ExifPhotoReader.Types
 
         public static double ExifGpsToFloat(string gpsRef, PropertyItem propItem)
         {
-            uint degreesNumerator = BitConverter.ToUInt32(propItem.Value, 0);
-            uint degreesDenominator = BitConverter.ToUInt32(propItem.Value, 4);
-            float degrees = degreesNumerator / (float)degreesDenominator;
+            float coorditate = 0;
+            try
+            {
+                if (propItem.Value.Length >= 24)
+                {
+                    uint degreesNumerator = BitConverter.ToUInt32(propItem.Value, 0);
+                    uint degreesDenominator = BitConverter.ToUInt32(propItem.Value, 4);
+                    float degrees = degreesNumerator / (float)degreesDenominator;
 
-            uint minutesNumerator = BitConverter.ToUInt32(propItem.Value, 8);
-            uint minutesDenominator = BitConverter.ToUInt32(propItem.Value, 12);
-            float minutes = minutesNumerator / (float)minutesDenominator;
+                    uint minutesNumerator = BitConverter.ToUInt32(propItem.Value, 8);
+                    uint minutesDenominator = BitConverter.ToUInt32(propItem.Value, 12);
+                    float minutes = minutesNumerator / (float)minutesDenominator;
 
-            uint secondsNumerator = BitConverter.ToUInt32(propItem.Value, 16);
-            uint secondsDenominator = BitConverter.ToUInt32(propItem.Value, 20);
-            float seconds = secondsNumerator / (float)secondsDenominator;
+                    uint secondsNumerator = BitConverter.ToUInt32(propItem.Value, 16);
+                    uint secondsDenominator = BitConverter.ToUInt32(propItem.Value, 20);
+                    float seconds = secondsNumerator / (float)secondsDenominator;
 
-            float coorditate = degrees + (minutes / 60f) + (seconds / 3600f);
+                    coorditate = degrees + (minutes / 60f) + (seconds / 3600f);
 
-            if (gpsRef == "South" || gpsRef == "West")
-                coorditate = 0 - coorditate;
+                    if (gpsRef == "South" || gpsRef == "West")
+                        coorditate = 0 - coorditate;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"ExifGpsToFloat Error : {ex.Message} {propItem.Id}: {gpsRef}");
+            }
             return coorditate;
         }
 
