@@ -58,7 +58,7 @@ namespace photoDateModifier
             // 
             // m_btnChooseFile
             // 
-            this.m_btnChooseFile.Location = new System.Drawing.Point(897, 9);
+            this.m_btnChooseFile.Location = new System.Drawing.Point(910, 9);
             this.m_btnChooseFile.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.m_btnChooseFile.Name = "m_btnChooseFile";
             this.m_btnChooseFile.Size = new System.Drawing.Size(34, 22);
@@ -126,7 +126,7 @@ namespace photoDateModifier
             // 
             this.m_cmbImages.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.m_cmbImages.FormattingEnabled = true;
-            this.m_cmbImages.Location = new System.Drawing.Point(97, 7);
+            this.m_cmbImages.Location = new System.Drawing.Point(64, 7);
             this.m_cmbImages.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.m_cmbImages.Name = "m_cmbImages";
             this.m_cmbImages.Size = new System.Drawing.Size(731, 20);
@@ -137,10 +137,10 @@ namespace photoDateModifier
             // 
             this.m_btnUpdateAndJump.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.m_btnUpdateAndJump.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.m_btnUpdateAndJump.Location = new System.Drawing.Point(1086, 9);
+            this.m_btnUpdateAndJump.Location = new System.Drawing.Point(1099, 9);
             this.m_btnUpdateAndJump.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.m_btnUpdateAndJump.Name = "m_btnUpdateAndJump";
-            this.m_btnUpdateAndJump.Size = new System.Drawing.Size(211, 22);
+            this.m_btnUpdateAndJump.Size = new System.Drawing.Size(198, 22);
             this.m_btnUpdateAndJump.TabIndex = 11;
             this.m_btnUpdateAndJump.Text = "&Update and Jump";
             this.m_btnUpdateAndJump.UseVisualStyleBackColor = true;
@@ -151,7 +151,7 @@ namespace photoDateModifier
             // 
             this.m_lblCounter.AutoSize = true;
             this.m_lblCounter.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.m_lblCounter.Location = new System.Drawing.Point(848, 11);
+            this.m_lblCounter.Location = new System.Drawing.Point(803, 11);
             this.m_lblCounter.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.m_lblCounter.Name = "m_lblCounter";
             this.m_lblCounter.Size = new System.Drawing.Size(27, 13);
@@ -175,7 +175,7 @@ namespace photoDateModifier
             // 
             // m_btnChooseFolder
             // 
-            this.m_btnChooseFolder.Location = new System.Drawing.Point(939, 9);
+            this.m_btnChooseFolder.Location = new System.Drawing.Point(952, 9);
             this.m_btnChooseFolder.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.m_btnChooseFolder.Name = "m_btnChooseFolder";
             this.m_btnChooseFolder.Size = new System.Drawing.Size(139, 22);

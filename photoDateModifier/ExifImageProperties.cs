@@ -4,8 +4,34 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ExifPhotoReader
 {
-    public class ExifImageProperties
+    public class ExifImageProperties : IDisposable
     {
+        private readonly System.ComponentModel.IContainer components = new System.ComponentModel.Container();
+        private bool disposedValue;
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    components.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        ~ExifImageProperties()
+        {
+        }
+
         [Display(Name = "Image Description")]
         public string ImageDescription { get; set; }
         [Display(Name = "Make")]

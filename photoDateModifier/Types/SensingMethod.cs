@@ -18,7 +18,6 @@ namespace ExifPhotoReader
         MonochromeLinear = 6,
         Trilinear = 7,
         [Description("Color sequential linear")]
-        ColorSequentialLinear = 8,
-
+        ColorSequentialLinear = 8
     }
 }

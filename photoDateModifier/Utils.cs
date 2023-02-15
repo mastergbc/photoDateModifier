@@ -21,7 +21,7 @@ namespace ExifPhotoReader
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"GetEnumObjectString Error : {ex.Message} {property.Id}: {tempObject}");
+                MessageBox.Show($"GetEnumObjectString Error[{property.Id}]: {ex.Message}: {tempObject}");
                 throw;
             }
             return tempObject;
@@ -39,7 +39,7 @@ namespace ExifPhotoReader
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"GetEnumObjectInt16 Error : {ex.Message} {property.Id}: {tempObject}");
+                MessageBox.Show($"GetEnumObjectInt16 Error[{property.Id}]: {ex.Message}: {tempObject}");
                 throw;
             }
             return tempObject;
@@ -57,7 +57,7 @@ namespace ExifPhotoReader
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"GetEnumObjectInt16 Error : {ex.Message} {property.Id}: {tempObject}");
+                MessageBox.Show($"GetEnumObjectInt32 Error[{property.Id}]: {ex.Message}: {tempObject}");
                 throw;
             }
             return tempObject;
@@ -75,7 +75,7 @@ namespace ExifPhotoReader
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"GetCalcFloatingNumber Error : {ex.Message} {property.Id}: {tempNo}");
+                MessageBox.Show($"GetCalcFloatingNumber Error[{property.Id}]: {ex.Message}: {tempNo}");
                 throw;
             }
             return tempNo;
@@ -93,7 +93,7 @@ namespace ExifPhotoReader
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"GetCalcShutterSpeedValue Error : {ex.Message} {property.Id}: {tempNo}");
+                MessageBox.Show($"GetCalcShutterSpeedValue Error[{property.Id}]: {ex.Message}: {tempNo}");
                 throw;
             }
             return tempNo;
@@ -101,7 +101,8 @@ namespace ExifPhotoReader
 
         public static DateTime GetConvertedDateTime(PropertyItem property, string format)
         {
-            var temp = Encoding.UTF8.GetString(property.Value).TrimEnd('\0');
+            Encoding _Encoding = Encoding.UTF8;
+            var temp = _Encoding.GetString(property.Value).TrimEnd('\0');
             DateTime.TryParseExact(temp, "yyyy:MM:dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime);
             return dateTime;
         }
@@ -118,7 +119,7 @@ namespace ExifPhotoReader
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"GetNumberValueInt32 Error : {ex.Message} {property.Id}: {tempNo}");
+                MessageBox.Show($"GetNumberValueInt32 Error[{property.Id}]: {ex.Message}: {tempNo}");
                 throw;
             }
             return tempNo;
@@ -136,7 +137,7 @@ namespace ExifPhotoReader
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"GetNumberValueInt16 Error : {ex.Message} {property.Id}: {tempNo}");
+                MessageBox.Show($"GetNumberValueInt16 Error[{property.Id}]: {ex.Message}: {tempNo}");
                 throw;
             }
             return tempNo;
@@ -154,7 +155,7 @@ namespace ExifPhotoReader
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"GetNumberValueInt64 Error : {ex.Message} {property.Id}: {tempNo}");
+                MessageBox.Show($"GetNumberValueInt64 Error[{property.Id}]: {ex.Message}: {tempNo}");
                 throw;
             }
             return tempNo;
@@ -165,14 +166,14 @@ namespace ExifPhotoReader
             float tempNo = 0;
             try
             {
-                if (property.Value.Length >= 2)
+                if (property.Value.Length >= 4)
                 {
                     tempNo = BitConverter.ToInt32(property.Value, position);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"GetNumberValueFloat Error : {ex.Message} {property.Id}: {tempNo}");
+                MessageBox.Show($"GetNumberValueFloat Error[{property.Id}]: {ex.Message}: {tempNo}");
                 throw;
             }
             return tempNo;
@@ -181,16 +182,17 @@ namespace ExifPhotoReader
         public static string GetStringValue(PropertyItem property)
         {
             string tempString = "";
+            Encoding _Encoding = Encoding.UTF8;
             try
             {
                 if (property.Value != null)
                 {
-                    tempString = new ASCIIEncoding().GetString(property.Value);
+                    tempString = _Encoding.GetString(property.Value);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"GetStringValue Error : {ex.Message} {property.Id}: {tempString}");
+                MessageBox.Show($"GetStringValue Error[{property.Id}]: {ex.Message}: {tempString}");
                 throw;
             }
             return tempString;

@@ -13,6 +13,5 @@ namespace ExifPhotoReader
         [Description("ICC Profile")]
         ICCProfile = 0xfffe,
         Uncalibrated = 0xffff
-
     }
 }

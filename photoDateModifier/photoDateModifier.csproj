@@ -7,8 +7,8 @@
     <ProjectGuid>{F556560B-F656-41B2-948C-21AAC3334F0C}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>exifEditor</RootNamespace>
-    <AssemblyName>exifEditor</AssemblyName>
+    <RootNamespace>photoDateModifier</RootNamespace>
+    <AssemblyName>photoDateModifier</AssemblyName>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
@@ -16,6 +16,7 @@
     <OldToolsVersion>2.0</OldToolsVersion>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <TargetFrameworkProfile />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>게시\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -28,7 +29,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -114,6 +114,9 @@
       <DependentUpon>mainDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="MetadataModifyLog.cs" />
+    <Compile Include="photoProcess.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Types\ColorSpace.cs" />

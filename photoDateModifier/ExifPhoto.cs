@@ -2,7 +2,6 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Text;
 using System.Windows.Forms;
 
 namespace ExifPhotoReader
@@ -26,7 +25,7 @@ namespace ExifPhotoReader
             }
             catch (Exception ex)
             {
-                MessageBox.Show("GetExifDataPhoto path Error: " + ex.Message + path);
+                MessageBox.Show($"GetExifDataPhoto path Error: {ex.Message} {path}");
                 throw;
             }
             return exifProperties;
@@ -47,7 +46,7 @@ namespace ExifPhotoReader
             }
             catch (Exception ex)
             {
-                Console.WriteLine("GetExifDataPhoto image Error: " + ex.Message);
+                Console.WriteLine($"GetExifDataPhoto image Error: {ex.Message}");
                 throw;
             }
             return exifProperties;
@@ -525,7 +524,7 @@ namespace ExifPhotoReader
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error exifConvert: " + ex.Message + property.Id);
+                MessageBox.Show($"Error ExifPhoto.Convert[{property.Id}]: {ex.Message} ");
                 throw;
             }
         }

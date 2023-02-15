@@ -78,7 +78,6 @@ namespace ExifPhotoReader
         [Description("Kodak DCR Compressed")]
         KodakDCRCompressed = 65000,
         [Description("Pentax PEF Compressed")]
-        PentaxPEFCompressed = 65535,
-
+        PentaxPEFCompressed = 65535
     }
 }
