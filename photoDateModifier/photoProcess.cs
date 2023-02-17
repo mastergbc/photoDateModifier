@@ -497,7 +497,9 @@ namespace photoDateModifier
                 DateTime lastWriteTime = File.GetLastWriteTime(imageFileFullName);
                 DateTime lastAccessTime = File.GetLastAccessTime(imageFileFullName);
 
-                imageDescription = exifImage.ImageDescription; // Back up the string read from exifImage.ImageDescription to imageMetadata.imageDescriptionTemp.
+                // Back up the string read from exifImage.ImageDescription to imageMetadata.imageDescriptionTemp.
+                imageDescription = exifImage.ImageDescription;
+                imageDescription?.Trim();
                 imageMetadata.imageDescriptionTemp = imageDescription;
                 imageMetadata.fileCreationTime = creationTime;
                 imageMetadata.fileLastWriteTime = lastWriteTime;
