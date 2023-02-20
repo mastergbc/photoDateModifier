@@ -1,6 +1,9 @@
-# photoDateModifier
-edit datetime infomation of exif &amp; fileinfo 
-A .NET program that modifies the creation and modification dates of images based on the filename.
+# photoDateModifier 
+![](https://img.shields.io/badge/VisualStudio-5C2D91?style=flat-square&logo=VisualStudio&logoColor=white)
+![](https://img.shields.io/badge/C%23-A8B9CC?style=flat-square&logo=C&logoColor=white)
+
+Extract DateTime information from image files through fileinfo, exifData, xmpData. Then, the earliest date is determined by combining the dateTimes inferred from the folder name and file name of the file.
+A .NET-based program that matches all time values with the earliest date computed in this way.
 
 ## Getting Started
 These instructions will get you a copy of the program up and running on your local machine for development and testing purposes.
@@ -10,6 +13,17 @@ The following software is required to run the program:
 
 - .NET Framework 4.8
 - Visual Studio 2019 or later
+
+## NuGet packages (recommended)
+- MetadataExtractor
+- Newtonsoft.Json
+- ObjectListView.Official
+- System.ComponentModel.Annotations
+- System.Drawing.Common
+- System.Threading.Tasks.Parallel
+- WindowsAPICodePack-Core
+- WindowsAPICodePack-Shell
+- XmpCore
 
 ## How to use photoDateModifier
 
