@@ -148,103 +148,12 @@ namespace photoDateModifier
                     PropertyItem[] propItems = images.PropertyItems;
                     var exifImage = ExifPhoto.GetExifDataPhoto(images);
                     bool isModifyMetadata = false;
-                    isModifyMetadata = LoadMetaData(currImageFile, imageMetadata, exifImage, ref imageDescription); // If succeeds, imageMetadata data is updated.
+                    // If succeeds, imageMetadata data is updated.
+                    isModifyMetadata = LoadMetaData(currImageFile, imageMetadata, exifImage, ref imageDescription);
 
                     if (isModifyMetadata == true)
                     {
-                        //수정사항 있음.
-                        var jsonLog = new MetadataModifyLog();
-                        try
-                        {
-                            jsonLog.Number = currIndex;
-                            jsonLog.FolderName = imageMetadata.folderName;
-                            jsonLog.FileName = imageMetadata.fileName;
-                            jsonLog.FilenameDateTime = imageMetadata.fileNameDateTime;
-                            jsonLog.FoldernameDateTime = imageMetadata.folderNameDateTime;
-                            jsonLog.EarliestDate = imageMetadata.earliestDate;
-                            jsonLog.DateAcquired = imageMetadata.xmpDateAcquiredTime;
-                            jsonLog.BeforeDateTime = imageMetadata.exifDateTime;
-                            jsonLog.BeforeDateTimeOriginal = imageMetadata.exifDateTimeOriginal;
-                            jsonLog.BeforeDateTimeDigitized = imageMetadata.exifDateTimeDigitized;
-                            jsonLog.BeforeImageDescription = imageMetadata.imageDescriptionTemp;
-                            jsonLog.BeforeCreationTime = imageMetadata.fileCreationTime;
-                            jsonLog.BeforeLastWriteTime = imageMetadata.fileLastWriteTime;
-                            jsonLog.BeforeLastAccessTime = imageMetadata.fileLastAccessTime;
-                            jsonLog.AfterCreationTime = imageMetadata.earliestDate;
-                            jsonLog.AfterLastWriteTime = imageMetadata.earliestDate;
-                            jsonLog.AfterLastAccessTime = imageMetadata.earliestDate;
-
-                            DateTime previousTime = DateTime.MinValue;
-                            PropertyItem dateTimePropertyItem = imageMetadata.GetDataOnTag(ExifTags.DateTimeTag, propItems, ref previousTime);
-                            if (dateTimePropertyItem != null)
-                            {
-                                images.SetPropertyItem(dateTimePropertyItem);
-                                jsonLog.AfterDateTime = imageMetadata.earliestDate;
-                            }
-                            PropertyItem dateTimeOriginalPropertyItem = imageMetadata.GetDataOnTag(ExifTags.DateTimeOriginalTag, propItems, ref previousTime);
-                            if (dateTimeOriginalPropertyItem != null)
-                            {
-                                images.SetPropertyItem(dateTimeOriginalPropertyItem);
-                                jsonLog.AfterDateTimeOriginal = imageMetadata.earliestDate;
-                            }
-                            PropertyItem dateTimeDigitizedPropertyItem = imageMetadata.GetDataOnTag(ExifTags.DateTimeDigitizedTag, propItems, ref previousTime);
-                            if (dateTimeDigitizedPropertyItem != null)
-                            {
-                                images.SetPropertyItem(dateTimeDigitizedPropertyItem);
-                                jsonLog.AfterDateTimeDigitized = imageMetadata.earliestDate;
-                            }
-                            string previousImageDescription = imageMetadata.imageDescriptionTemp;
-                            PropertyItem imageDescriptionPropertyItem = imageMetadata.GetDataOnTag(ExifTags.ImageDescriptionTag, propItems, ref imageDescription);
-                            if (imageDescriptionPropertyItem != null)
-                            {
-                                images.SetPropertyItem(imageDescriptionPropertyItem);
-                                jsonLog.AfterImageDescription = imageDescription;
-                            }
-
-                            bool fileSaved = false;
-                            while (!fileSaved)
-                            {
-                                try
-                                {
-                                    // Saving as Jpeg loses xmpDirectory metadata.
-                                    // It should be saved as BMP or PNG, but then the capacity increases, right?
-                                    // Is there any solution??
-                                    images.Save(currImageFile, ImageFormat.Jpeg);
-                                    fileSaved = true;
-                                }
-                                catch (IOException)
-                                {
-                                    System.Threading.Thread.Sleep(1); // Wait for a moment and try again
-                                }
-                            }
-
-                            bool fileInfoSaved = false;
-                            while (!fileInfoSaved)
-                            {
-                                try
-                                {
-                                    lock (currImageFile)
-                                    {
-                                        File.SetCreationTime(currImageFile, imageMetadata.earliestDate);
-                                        File.SetLastWriteTime(currImageFile, imageMetadata.earliestDate);
-                                        File.SetLastAccessTime(currImageFile, imageMetadata.earliestDate);
-                                        fileInfoSaved = true;
-                                    }
-                                }
-                                catch (IOException)
-                                {
-                                    System.Threading.Thread.Sleep(1); // Wait for a moment and try again
-                                }
-                            }
-                        }
-                        catch (Exception exprop)
-                        {
-                            MessageBox.Show($"Error save modified image file[{currImageFile}]: {exprop.Message}");
-                        }
-
-                        bool isJsonLogAdded = jsonList.TryAdd(currIndex, jsonLog);
-                        jsonList.TryGetValue(currIndex, out MetadataModifyLog metadataModifyLog);
-                        Console.WriteLine(currIndex + ":" + jsonLog.FileName + "{0} {1}", isJsonLogAdded, metadataModifyLog.FileName);
+                        imageDescription = SaveMetaData(currImageFile, currIndex, imageMetadata, imageDescription, images, propItems);
                     }
                 } // image Auto Disposed
                 try
@@ -262,6 +171,122 @@ namespace photoDateModifier
             }
         }
 
+        /// <summary>
+        /// Saves the image metadata to the specified file and updates the file creation, last write, and last access times.
+        /// This method also adds the modification log to the global jsonList.
+        /// Returns the updated image description.
+        /// </summary>
+        /// <param name="currImageFile">The full path of the image file to save.</param>
+        /// <param name="currIndex">The index of the image in the ListView.</param>
+        /// <param name="imageMetadata">The metadata of the image.</param>
+        /// <param name="imageDescription">The image description to save.</param>
+        /// <param name="images">The image to save.</param>
+        /// <param name="propItems">The property items of the image.</param>
+        /// <returns>The updated image description.</returns>
+        /// <exception cref="IOException">Thrown when an I/O error occurs during file saving or modification time update.</exception>
+        private string SaveMetaData(string currImageFile, int currIndex, ImageMetadata imageMetadata, string imageDescription, Image images, PropertyItem[] propItems)
+        {
+            var jsonLog = new MetadataModifyLog();
+            try
+            {
+                jsonLog.Number = currIndex;
+                jsonLog.FolderName = imageMetadata.folderName;
+                jsonLog.FileName = imageMetadata.fileName;
+                jsonLog.FilenameDateTime = imageMetadata.fileNameDateTime;
+                jsonLog.FoldernameDateTime = imageMetadata.folderNameDateTime;
+                jsonLog.EarliestDate = imageMetadata.earliestDate;
+                jsonLog.DateAcquired = imageMetadata.xmpDateAcquiredTime;
+                jsonLog.BeforeDateTime = imageMetadata.exifDateTime;
+                jsonLog.BeforeDateTimeOriginal = imageMetadata.exifDateTimeOriginal;
+                jsonLog.BeforeDateTimeDigitized = imageMetadata.exifDateTimeDigitized;
+                jsonLog.BeforeImageDescription = imageMetadata.imageDescriptionTemp;
+                jsonLog.BeforeCreationTime = imageMetadata.fileCreationTime;
+                jsonLog.BeforeLastWriteTime = imageMetadata.fileLastWriteTime;
+                jsonLog.BeforeLastAccessTime = imageMetadata.fileLastAccessTime;
+                jsonLog.AfterCreationTime = imageMetadata.earliestDate;
+                jsonLog.AfterLastWriteTime = imageMetadata.earliestDate;
+                jsonLog.AfterLastAccessTime = imageMetadata.earliestDate;
+
+                DateTime previousTime = DateTime.MinValue;
+                PropertyItem dateTimePropertyItem = imageMetadata.GetDataOnTag(ExifTags.DateTimeTag, propItems, ref previousTime);
+                if (dateTimePropertyItem != null)
+                {
+                    images.SetPropertyItem(dateTimePropertyItem);
+                    jsonLog.AfterDateTime = imageMetadata.earliestDate;
+                }
+                PropertyItem dateTimeOriginalPropertyItem = imageMetadata.GetDataOnTag(ExifTags.DateTimeOriginalTag, propItems, ref previousTime);
+                if (dateTimeOriginalPropertyItem != null)
+                {
+                    images.SetPropertyItem(dateTimeOriginalPropertyItem);
+                    jsonLog.AfterDateTimeOriginal = imageMetadata.earliestDate;
+                }
+                PropertyItem dateTimeDigitizedPropertyItem = imageMetadata.GetDataOnTag(ExifTags.DateTimeDigitizedTag, propItems, ref previousTime);
+                if (dateTimeDigitizedPropertyItem != null)
+                {
+                    images.SetPropertyItem(dateTimeDigitizedPropertyItem);
+                    jsonLog.AfterDateTimeDigitized = imageMetadata.earliestDate;
+                }
+                string previousImageDescription = imageMetadata.imageDescriptionTemp;
+                PropertyItem imageDescriptionPropertyItem = imageMetadata.GetDataOnTag(ExifTags.ImageDescriptionTag, propItems, ref imageDescription);
+                if (imageDescriptionPropertyItem != null)
+                {
+                    images.SetPropertyItem(imageDescriptionPropertyItem);
+                    jsonLog.AfterImageDescription = imageDescription;
+                }
+
+                bool fileSaved = false;
+                while (!fileSaved)
+                {
+                    try
+                    {
+                        // Saving as Jpeg loses xmpDirectory metadata.
+                        // It should be saved as BMP or PNG, but then the capacity increases, right?
+                        // Is there any solution??
+                        images.Save(currImageFile, ImageFormat.Jpeg);
+                        fileSaved = true;
+                    }
+                    catch (IOException)
+                    {
+                        System.Threading.Thread.Sleep(1); // Wait for a moment and try again
+                    }
+                }
+
+                bool fileInfoSaved = false;
+                while (!fileInfoSaved)
+                {
+                    try
+                    {
+                        lock (currImageFile)
+                        {
+                            File.SetCreationTime(currImageFile, imageMetadata.earliestDate);
+                            File.SetLastWriteTime(currImageFile, imageMetadata.earliestDate);
+                            File.SetLastAccessTime(currImageFile, imageMetadata.earliestDate);
+                            fileInfoSaved = true;
+                        }
+                    }
+                    catch (IOException)
+                    {
+                        System.Threading.Thread.Sleep(1); // Wait for a moment and try again
+                    }
+                }
+            }
+            catch (Exception exprop)
+            {
+                MessageBox.Show($"Error save modified image file[{currImageFile}]: {exprop.Message}");
+            }
+
+            bool isJsonLogAdded = jsonList.TryAdd(currIndex, jsonLog);
+            jsonList.TryGetValue(currIndex, out MetadataModifyLog metadataModifyLog);
+            Console.WriteLine(currIndex + ":" + jsonLog.FileName + "{0} {1}", isJsonLogAdded, metadataModifyLog.FileName);
+            return imageDescription;
+        }
+
+        /// <summary>
+        /// Loads the metadata for the specified image file <see cref="m_currImageFile"/> and updates <br/>
+        /// the provided <paramref name="exifImage"/> parameter with the extracted <paramref name="imageDescription"/>.
+        /// </summary>
+        /// <param name="exifImage">The ExifImageProperties object representing the image file metadata.</param>
+        /// <param name="imageDescription">A string that will be updated with the extracted image description.</param>
         private void LoadMetaData(ExifImageProperties exifImage, ref string imageDescription)
         {
             try
@@ -488,6 +513,18 @@ namespace photoDateModifier
             }
         }
 
+        /// <summary>
+        /// Loads the metadata, exif properties and image description for the specified image file.
+        /// Gets the creation time from the image file and updates the <paramref name="imageMetadata"/>, <paramref name="exifImage"/> and <paramref name="imageDescription"/> accordingly.
+        /// This method also plays the role of <see cref="earliestDate"/> and updates the time information in batches.
+        /// </summary>
+        /// <param name="imageFileFullName">The full name of the image file to load metadata from.</param>
+        /// <param name="imageMetadata">The ImageMetadata object to update with the loaded metadata.</param>
+        /// <param name="exifImage">The ExifImageProperties object to update with the loaded exif properties.</param>
+        /// <param name="imageDescription">The string variable to update with the loaded image description.</param>
+        /// <returns>
+        /// Returns <see langword="true"/> if a date conversion is successfully. <see langword="false"/> otherwize..
+        /// </returns>
         private bool LoadMetaData(string imageFileFullName, ImageMetadata imageMetadata, ExifImageProperties exifImage,
                                   ref string imageDescription)
         {
