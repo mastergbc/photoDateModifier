@@ -412,11 +412,52 @@ namespace photoDateModifier
                     return false;
                 }
             }
+            else if (TryConvertToDateTime(this.fileName, out DateTime dateTime))
+            {
+                this.fileNameDateTime = dateTime;
+                if (DateTimeValidator(fileNameDateTime))
+                {
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine("Parsing fail. Date not found in file name.");
+                    return false;
+                }
+            }
             else
             {
                 Console.WriteLine("Date not found in file name.");
             }
-            return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to convert a string representation of a Unix timestamp to a DateTime value and returns a Boolean indicating whether the conversion succeeded.<br/>
+        /// If the conversion succeeds, the output parameter is set to the resulting DateTime value.
+        /// </summary>
+        /// <param name="input">The string representation of a Unix timestamp</param>
+        /// <param name="output">The resulting DateTime value if the conversion succeeded, or DateTime.MinValue if the conversion failed</param>
+        /// <returns> <see langword="true"/> if the conversion succeeded, <see langword="false"/> otherwise</returns>
+        public static bool TryConvertToDateTime(string input, out DateTime output)
+        {
+            long timestamp;
+
+            if (long.TryParse(input, out timestamp))
+            {
+                // Convert to DateTime
+                DateTime unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                output = unixEpoch.AddMilliseconds(timestamp);
+
+                // Convert to GMT+9
+                output = TimeZoneInfo.ConvertTimeToUtc(output, TimeZoneInfo.Utc).AddHours(9);
+                return true;
+            }
+            else
+            {
+                output = DateTime.MinValue;
+                return false;
+            }
         }
 
         /// <summary>
