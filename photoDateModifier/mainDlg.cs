@@ -17,8 +17,10 @@ namespace photoDateModifier
     {
         private String m_currImageFile;
         private String m_currImageFileTemp;
+        private String m_currFolder;
         private volatile bool isAutoLoadEnabled = false;
         private List<string> fileNamesList = null;
+        private bool isCheckedFileTimePrioty = false;
 
         public mainDlg()
         {
@@ -46,8 +48,6 @@ namespace photoDateModifier
             try
             {
                 OpenFileDialog openDialog = new OpenFileDialog();
-
-                openDialog.InitialDirectory = "g:\\Temp";
                 openDialog.Filter = "jpg files (*.jpg,*.jpeg)|*.jpg;*.jpeg";
                 openDialog.FilterIndex = 1;
                 openDialog.Multiselect = true;
@@ -57,6 +57,7 @@ namespace photoDateModifier
 
                 if (openDialog.ShowDialog() == DialogResult.OK)
                 {
+                    m_currFolder = Path.GetDirectoryName(openDialog.FileName);
                     fileNamesList = openDialog.FileNames.ToList();
                     m_cmbImages.DataSource = openDialog.FileNames.ToList();
                 }
@@ -70,10 +71,13 @@ namespace photoDateModifier
         private void m_btnChooseFolder_Click(object sender, EventArgs e)
         {
             CommonOpenFileDialog dialog = new CommonOpenFileDialog();
+            dialog.RestoreDirectory = true;
+            dialog.EnsurePathExists = true;
             dialog.IsFolderPicker = true;
 
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
+                m_currFolder = Path.GetDirectoryName(dialog.FileName);
                 List<string> jpgFiles = System.IO.Directory.GetFiles(dialog.FileName, "*.jpg", SearchOption.AllDirectories).ToList();
                 List<string> jpegFiles = System.IO.Directory.GetFiles(dialog.FileName, "*.jpeg", SearchOption.AllDirectories).ToList();
                 fileNamesList = jpgFiles.Concat(jpegFiles).ToList();
@@ -138,6 +142,7 @@ namespace photoDateModifier
 
                 if (isAutoLoadEnabled)
                 {
+                    isCheckedFileTimePrioty = m_checkBoxFileTimePrioty.Checked;
                     // start loading images in sequence
                     m_btnUpdateAndJump.Text = "Stop";
 

@@ -24,7 +24,8 @@ namespace photoDateModifier
             var tasks = new List<Task>();
             int currKeys = 0;
             var logFileName = "metadataModify_" + DateTime.Now.ToString("yyMMdd_HHmmdd") + ".json";
-            var logFilePath = Path.Combine(Path.GetDirectoryName(m_currImageFile), logFileName);
+            Console.WriteLine($"path = {m_currFolder}");
+            var logFilePath = Path.Combine(m_currFolder, logFileName);
 
             while (currKeys < fileNamesList.Count)
             {
@@ -140,7 +141,7 @@ namespace photoDateModifier
 
             try
             {
-                ImageMetadata imageMetadata = new ImageMetadata(currImageFile);
+                ImageMetadata imageMetadata = new ImageMetadata(currImageFile, isCheckedFileTimePrioty);
                 string currImageFileTemp = Path.GetTempPath() + "__exifEditor__" + Path.GetRandomFileName();
                 File.Copy(currImageFile, currImageFileTemp, false); // set overwrite to false to preserve file attributes
                 string imageDescription = "";
@@ -499,7 +500,7 @@ namespace photoDateModifier
                 row.SubItems.Add(imageDescription);
                 if (imageDescription?.Equals(imageMetadata?.imageDescriptionTemp) ?? false)
                 {
-                    imageMetadata.flagValue = true;
+                    imageMetadata.isDifferentMetadata = true;
                 }
                 else
                 {
@@ -619,7 +620,7 @@ namespace photoDateModifier
                 }
                 if (imageDescription?.Equals(imageMetadata?.imageDescriptionTemp) ?? false)
                 {
-                    imageMetadata.flagValue = true;
+                    imageMetadata.isDifferentMetadata = true;
                 }
             }
             catch (Exception excep)
@@ -627,7 +628,7 @@ namespace photoDateModifier
                 MessageBox.Show($"Error LoadMetaData[{imageFileFullName}]: {excep.Message }");
                 throw;
             }
-            return imageMetadata.flagValue;
+            return imageMetadata.isDifferentMetadata;
         }
 
         public class ListViewColumnSorter : IComparer

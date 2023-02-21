@@ -42,6 +42,7 @@ namespace photoDateModifier
             this.m_btnUpdate = new System.Windows.Forms.Button();
             this.m_btnChooseFolder = new System.Windows.Forms.Button();
             this.m_btnLoadMetadataLog = new System.Windows.Forms.Button();
+            this.m_checkBoxFileTimePrioty = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.m_pBImage)).BeginInit();
             this.SuspendLayout();
             // 
@@ -194,11 +195,22 @@ namespace photoDateModifier
             this.m_btnLoadMetadataLog.UseVisualStyleBackColor = true;
             this.m_btnLoadMetadataLog.Click += new System.EventHandler(this.m_btnLoadMetadataLog_Click);
             // 
+            // m_checkBoxFileTimePrioty
+            // 
+            this.m_checkBoxFileTimePrioty.AutoSize = true;
+            this.m_checkBoxFileTimePrioty.Location = new System.Drawing.Point(18, 374);
+            this.m_checkBoxFileTimePrioty.Name = "m_checkBoxFileTimePrioty";
+            this.m_checkBoxFileTimePrioty.Size = new System.Drawing.Size(124, 16);
+            this.m_checkBoxFileTimePrioty.TabIndex = 15;
+            this.m_checkBoxFileTimePrioty.Text = "파일이름시간 우선";
+            this.m_checkBoxFileTimePrioty.UseVisualStyleBackColor = true;
+            // 
             // mainDlg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(1310, 414);
+            this.Controls.Add(this.m_checkBoxFileTimePrioty);
             this.Controls.Add(this.m_btnLoadMetadataLog);
             this.Controls.Add(this.m_btnChooseFolder);
             this.Controls.Add(this.m_lblCounter);
@@ -235,6 +247,7 @@ namespace photoDateModifier
         private System.Windows.Forms.Button m_btnUpdate;
         private System.Windows.Forms.Button m_btnChooseFolder;
         private System.Windows.Forms.Button m_btnLoadMetadataLog;
+        private System.Windows.Forms.CheckBox m_checkBoxFileTimePrioty;
     }
 }
 

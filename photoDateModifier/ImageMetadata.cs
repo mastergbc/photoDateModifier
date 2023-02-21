@@ -180,7 +180,12 @@ namespace photoDateModifier
         /// <summary>
         /// A flag variable to check if the metadata has been modified.
         /// </summary>
-        public bool flagValue { get; set; }
+        public bool isDifferentMetadata { get; set; }
+
+        /// <summary>
+        /// A flag variable to check if FileNameDateTime has high priority.
+        /// </summary>
+        public bool doesFileNameDateTimePriority { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ImageMetadata"/> class with default threshold year.
@@ -202,7 +207,8 @@ namespace photoDateModifier
             earliestDate = DateTime.MaxValue;
             earliestDateTimeByte = null;
             imageDescriptionTemp = "";
-            flagValue = false;
+            isDifferentMetadata = false;
+            doesFileNameDateTimePriority = false;
         }
 
         /// <summary>
@@ -243,7 +249,52 @@ namespace photoDateModifier
             earliestDate = DateTime.MaxValue;
             earliestDateTimeByte = null;
             imageDescriptionTemp = "";
-            flagValue = false;
+            isDifferentMetadata = false;
+            doesFileNameDateTimePriority = false;
+        }
+
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="ImageMetadata"/> class with <paramref name="fileFullName"/> value.
+        /// <para>
+        /// The specified <paramref name="fileFullName"/> must be non-null and a valid file that exists.<br/>
+        /// <paramref name="thresholdYear"/> is assigned <paramref name="initialThresholdYear"/>.<br/>
+        /// <paramref name="isTrue"/> is assigned <see cref="doesFileNameDateTimePriority"/>.
+        /// </para>
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <param name="thresholdYear">The earliest valid year.</param>
+        /// <param name="initialThresholdYear">Initial value for the earliest valid year.</param>
+        /// <param name="fileFullName">The full path of the image file.</param>
+        /// <param name="isTrue">A checkbox flag to ensure that FileNameDateTime takes precedence.</param>
+        public ImageMetadata(string fileFullName, bool isTrue)
+        {
+            if (fileFullName == null)
+            {
+                throw new ArgumentNullException(nameof(fileFullName));
+            }
+            if (!File.Exists(fileFullName))
+            {
+                throw new ArgumentException($"The specified file \"{fileFullName}\" does not exist.");
+            }
+
+            thresholdYear = initialThresholdYear;
+            GetXmpDateAcquiredTime(fileFullName);
+            fileName = Path.GetFileNameWithoutExtension(fileFullName);
+            folderName = Path.GetDirectoryName(fileFullName).Split(Path.DirectorySeparatorChar).Last();
+            TrySetFolderNameDateTime();
+            TrySetFileNameDateTime();
+            fileCreationTime = DateTime.MinValue;
+            fileLastWriteTime = DateTime.MinValue;
+            fileLastAccessTime = DateTime.MinValue;
+            exifDateTime = DateTime.MinValue;
+            exifDateTimeOriginal = DateTime.MinValue;
+            exifDateTimeDigitized = DateTime.MinValue;
+            earliestDate = DateTime.MaxValue;
+            earliestDateTimeByte = null;
+            imageDescriptionTemp = "";
+            isDifferentMetadata = false;
+            doesFileNameDateTimePriority = isTrue;
         }
 
         /// <summary>
@@ -284,7 +335,8 @@ namespace photoDateModifier
             earliestDate = DateTime.MaxValue;
             earliestDateTimeByte = null;
             imageDescriptionTemp = "";
-            flagValue = false;
+            isDifferentMetadata = false;
+            doesFileNameDateTimePriority = false;
         }
 
         /// <summary>
@@ -337,7 +389,8 @@ namespace photoDateModifier
             earliestDate = DateTime.MaxValue;
             earliestDateTimeByte = null;
             imageDescriptionTemp = "";
-            flagValue = false;
+            isDifferentMetadata = false;
+            doesFileNameDateTimePriority = false;
         }
 
         /// <summary>
@@ -443,7 +496,7 @@ namespace photoDateModifier
         {
             long timestamp;
 
-            if (long.TryParse(input, out timestamp))
+            if (input.Length >= 13 && long.TryParse(input, out timestamp))
             {
                 // Convert to DateTime
                 DateTime unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -456,8 +509,8 @@ namespace photoDateModifier
             else
             {
                 output = DateTime.MinValue;
-                return false;
             }
+            return false;
         }
 
         /// <summary>
@@ -612,64 +665,67 @@ namespace photoDateModifier
         /// </remarks>
         public bool FindEarliestDate()
         {
-            if (xmpDateAcquiredTime.Ticks > 0 && xmpDateAcquiredTime.Year > thresholdYear)
+
+            if (DateTimeValidator(xmpDateAcquiredTime) && xmpDateAcquiredTime.Year > thresholdYear)
             {
                 earliestDate = xmpDateAcquiredTime;
-                flagValue = true;
+                isDifferentMetadata = true;
             }
-
-            if (fileNameDateTime.Ticks > 0 && fileNameDateTime.Year > thresholdYear && fileNameDateTime < earliestDate)
-            {
-                earliestDate = new DateTime(fileNameDateTime.Year, fileNameDateTime.Month, fileNameDateTime.Day,
-                                            fileNameDateTime.Hour, fileNameDateTime.Minute, fileNameDateTime.Second);
-                flagValue = true;
-            }
-
-            if (fileCreationTime.Ticks > 0 && fileCreationTime.Year > thresholdYear && fileCreationTime < earliestDate)
+            if (DateTimeValidator(fileCreationTime) && fileCreationTime < earliestDate)
             {
                 earliestDate = fileCreationTime;
-                flagValue = true;
+                isDifferentMetadata = true;
             }
-            if (fileLastWriteTime.Ticks > 0 && fileLastWriteTime.Year > thresholdYear && fileLastWriteTime < earliestDate)
+            if (DateTimeValidator(fileLastWriteTime) && fileLastWriteTime < earliestDate)
             {
                 earliestDate = fileLastWriteTime;
-                flagValue = true;
+                isDifferentMetadata = true;
             }
-            if (fileLastAccessTime.Ticks > 0 && fileLastAccessTime.Year > thresholdYear && fileLastAccessTime < earliestDate)
+            if (DateTimeValidator(fileLastAccessTime) && fileLastAccessTime < earliestDate)
             {
                 earliestDate = fileLastAccessTime;
-                flagValue = true;
+                isDifferentMetadata = true;
             }
-
-            //If the picture was taken with a camera and the EXIF information remains, DateTime is the most accurate creation time.
-            if (exifDateTime.Ticks > 0 && exifDateTime.Year > thresholdYear && exifDateTime < earliestDate)
+            //If the picture was taken with a camera and the EXIF information remains, The most high-priority and accurate creation time is DateTime.
+            if (DateTimeValidator(exifDateTime) && exifDateTime < earliestDate)
             {
                 earliestDate = exifDateTime;
-                flagValue = true;
+                isDifferentMetadata = true;
             }
-            if (exifDateTimeOriginal.Ticks > 0 && exifDateTimeOriginal.Year > thresholdYear && exifDateTimeOriginal < earliestDate)
+            if (DateTimeValidator(exifDateTimeOriginal) && exifDateTimeOriginal < earliestDate)
             {
                 earliestDate = exifDateTimeOriginal;
-                flagValue = true;
+                isDifferentMetadata = true;
             }
-            if (exifDateTimeDigitized.Ticks > 0 && exifDateTimeDigitized.Year > thresholdYear && exifDateTimeDigitized < earliestDate)
+            if (DateTimeValidator(exifDateTimeDigitized) && exifDateTimeDigitized < earliestDate)
             {
                 earliestDate = exifDateTimeDigitized;
-                flagValue = true;
+                isDifferentMetadata = true;
             }
 
+            // When fileNameDateTime is a valid value,
+            //   if doesFileNameDateTimePriority is true or fileNameDateTime is the earliest time, the value of earliestDate is replaced.
             // Compare folderNameDateTime, the date inferred from the folder name, with earliestDate at the very end.
-            // folderNameDateTime uses only year, month, and day.
-            // Date difference within 15 days based on folderNameDateTime is ignored.
-            if (folderNameDateTime.Ticks > 0 && folderNameDateTime.Year > thresholdYear
-                && Math.Abs((folderNameDateTime - earliestDate).Days) >= 15)
+            //   folderNameDateTime uses only year, month, and day.
+            //   Date difference within 15 days based on folderNameDateTime is ignored.
+            if (DateTimeValidator(fileNameDateTime))
+            {
+                if (fileNameDateTime < earliestDate || doesFileNameDateTimePriority)
+                {
+                    earliestDate = new DateTime(fileNameDateTime.Year, fileNameDateTime.Month, fileNameDateTime.Day,
+                    fileNameDateTime.Hour, fileNameDateTime.Minute, fileNameDateTime.Second);
+                    isDifferentMetadata = true;
+                }
+            }
+            if (DateTimeValidator(folderNameDateTime) &&  && folderNameDateTime < earliestDate
+            && Math.Abs((folderNameDateTime - earliestDate).Days) >= 15)
             {
                 earliestDate = new DateTime(folderNameDateTime.Year, folderNameDateTime.Month, folderNameDateTime.Day,
-                                            earliestDate.Hour, earliestDate.Minute, earliestDate.Second);
-                flagValue = true;
+                earliestDate.Hour, earliestDate.Minute, earliestDate.Second);
+                isDifferentMetadata = true;
             }
 
-            return flagValue;
+            return isDifferentMetadata;
         }
     }
 }
