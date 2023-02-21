@@ -5,6 +5,8 @@
 Extract DateTime information from image files through fileinfo, exifData, xmpData. Then, the earliest date is determined by combining the dateTimes inferred from the folder name and file name of the file.
 A .NET-based program that matches all time values with the earliest date computed in this way.
 
+![image](https://user-images.githubusercontent.com/125341305/220281298-7b154585-6c9f-44f6-81e7-9de6cf01f3f8.png)
+
 ## Getting Started
 These instructions will get you a copy of the program up and running on your local machine for development and testing purposes.
 
