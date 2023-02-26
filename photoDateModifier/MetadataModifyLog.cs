@@ -58,111 +58,86 @@ namespace photoDateModifier
         /// <summary>
         /// BeforeCreationTime refers to the creation time of the file before modification
         /// </summary>
-        [JsonProperty(PropertyName = @"BeforeCreationTime")]
+        [JsonProperty(PropertyName = @"BeforeCreationTime", Order = 7)]
         public DateTime BeforeCreationTime { get; set; }
 
         /// <summary>
         /// AfterCreationTime refers to the creation time of the file after modification
         /// </summary>
-        [JsonProperty(PropertyName = @"AfterCreationTime")]
+        [JsonProperty(PropertyName = @"AfterCreationTime", Order = 8)]
         public DateTime AfterCreationTime { get; set; }
 
         /// <summary>
         /// BeforeLastWriteTime refers to the last write time of the file before modification
         /// </summary>
-        [JsonProperty(PropertyName = @"BeforeLastWriteTime")]
+        [JsonProperty(PropertyName = @"BeforeLastWriteTime", Order = 9)]
         public DateTime BeforeLastWriteTime { get; set; }
 
         /// <summary>
         /// AfterLastWriteTime refers to the last write time of the file after modification
         /// </summary>
-        [JsonProperty(PropertyName = @"AfterLastWriteTime")]
+        [JsonProperty(PropertyName = @"AfterLastWriteTime", Order = 10)]
         public DateTime AfterLastWriteTime { get; set; }
 
         /// <summary>
         /// BeforeLastAccessTime refers to the last access time of the file before modification
         /// </summary>
-        [JsonProperty(PropertyName = @"BeforeLastAccessTime")]
+        [JsonProperty(PropertyName = @"BeforeLastAccessTime", Order = 11)]
         public DateTime BeforeLastAccessTime { get; set; }
 
         /// <summary>
         /// AfterLastAccessTime refers to the last access time of the file after modification
         /// </summary>
-        [JsonProperty(PropertyName = @"AfterLastAccessTime")]
+        [JsonProperty(PropertyName = @"AfterLastAccessTime", Order = 12)]
         public DateTime AfterLastAccessTime { get; set; }
 
         /// <summary>
         /// BeforeDateTime refers to the date time of the image before modification
         /// </summary>
-        [JsonProperty(PropertyName = @"BeforeDateTime")]
+        [JsonProperty(PropertyName = @"BeforeDateTime", Order = 13)]
         public DateTime BeforeDateTime { get; set; }
 
         /// <summary>
         /// AfterDateTime refers to the date time of the image after modification
         /// </summary>
-        [JsonProperty(PropertyName = @"AfterDateTime")]
+        [JsonProperty(PropertyName = @"AfterDateTime", Order = 14)]
         public DateTime AfterDateTime { get; set; }
 
         /// <summary>
         /// BeforeDateTimeOriginal refers to the original date time of the image before modification
         /// </summary>
-        [JsonProperty(PropertyName = @"BeforeDateTimeOriginal")]
+        [JsonProperty(PropertyName = @"BeforeDateTimeOriginal", Order = 15)]
         public DateTime BeforeDateTimeOriginal { get; set; }
 
         /// <summary>
         /// AfterDateTimeOriginal refers to the original date time of the image after modification
         /// </summary>
-        [JsonProperty(PropertyName = @"AfterDateTimeOriginal")]
+        [JsonProperty(PropertyName = @"AfterDateTimeOriginal", Order = 16)]
         public DateTime AfterDateTimeOriginal { get; set; }
 
         /// <summary>
         /// BeforeDateTimeDigitized refers to the digitized date time of the image before modification
         /// </summary>
-        [JsonProperty(PropertyName = @"BeforeDateTimeDigitized")]
+        [JsonProperty(PropertyName = @"BeforeDateTimeDigitized", Order = 17)]
         public DateTime BeforeDateTimeDigitized { get; set; }
 
         /// <summary>
         /// AfterDateTimeDigitized refers to the digitized date time of the image after modification
         /// </summary>
-        [JsonProperty(PropertyName = @"AfterDateTimeDigitized")]
+        [JsonProperty(PropertyName = @"AfterDateTimeDigitized", Order = 18)]
         public DateTime AfterDateTimeDigitized { get; set; }
 
         /// <summary>
         /// BeforeImageDescription refers to the image description of the image before modification
         /// </summary>
-        [JsonProperty(PropertyName = @"BeforeImageDescription")]
+        [JsonProperty(PropertyName = @"BeforeImageDescription", Order = 19)]
         public string BeforeImageDescription { get; set; }
 
         /// <summary>
         /// AfterImageDescription refers to the image description of the image after modification
         /// </summary>
-        [JsonProperty(PropertyName = @"AfterImageDescription")]
+        [JsonProperty(PropertyName = @"AfterImageDescription", Order = 20)]
         public string AfterImageDescription { get; set; }
-
-        public enum IndexNo
-        {
-            Number = 0,
-            FolderName,
-            FileName,
-            FilenameDateTime,
-            FoldernameDateTime,
-            EarliestDate,
-            DateAcquired,
-            BeforeCreationTime,
-            AfterCreationTime,
-            BeforeLastWriteTime,
-            AfterLastWriteTime,
-            BeforeLastAccessTime,
-            AfterLastAccessTime,
-            BeforeDateTime,
-            AfterDateTime,
-            BeforeDateTimeOriginal,
-            AfterDateTimeOriginal,
-            BeforeDateTimeDigitized,
-            AfterDateTimeDigitized,
-            BeforeImageDescription,
-            AfterImageDescription
-        }
 
         public MetadataModifyLog()
         {

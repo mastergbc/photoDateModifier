@@ -114,6 +114,7 @@
     <Compile Include="ExifImageProperties.cs" />
     <Compile Include="ExifPhoto.cs" />
     <Compile Include="ExifTags.cs" />
+    <Compile Include="ExifToolWrapper.cs" />
     <Compile Include="ImageMetadata.cs" />
     <Compile Include="mainDlg.cs">
       <SubType>Form</SubType>
@@ -204,6 +205,11 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Tool\exiftool.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

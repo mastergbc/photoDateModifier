@@ -10,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using SubWapper;
 
 namespace photoDateModifier
 {
@@ -114,6 +115,14 @@ namespace photoDateModifier
                 m_pBImage.Image = Bitmap.FromFile(m_currImageFileTemp);
                 try
                 {
+                    //Dictionary<string, string> exifDictionary;
+                    using (ExifToolWrapper exifToolWrapper = new ExifToolWrapper(m_currImageFile))
+                    {
+                        string jsonString = exifToolWrapper.Start();
+                        var exifDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>[]>(jsonString)[0];
+                    }
+                    // exifDictionary 까지 deserialize는 했는데... 이걸 ImageMetadata 에 얹는 건 어떻게 한다?...
+
                     using (ExifImageProperties exifImage = ExifPhoto.GetExifDataPhoto(m_currImageFileTemp))
                     {
                         string imageDescription = ""; // EXIF attribute value to record referenced tag keywords

@@ -717,7 +717,7 @@ namespace photoDateModifier
                     isDifferentMetadata = true;
                 }
             }
-            if (DateTimeValidator(folderNameDateTime) &&  && folderNameDateTime < earliestDate
+            if (DateTimeValidator(folderNameDateTime) && folderNameDateTime < earliestDate
             && Math.Abs((folderNameDateTime - earliestDate).Days) >= 15)
             {
                 earliestDate = new DateTime(folderNameDateTime.Year, folderNameDateTime.Month, folderNameDateTime.Day,
