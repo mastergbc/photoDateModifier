@@ -1,8 +1,7 @@
-/// <summary>
-/// Base design used exifEditor: https://1drv.ms/u/s!AmsqTf3EgmJAoZdvU1tuW0xXWl-LTA by https://happybono.wordpress.com/
-/// The code of ExifPhotoReader was modified at my own discretion.
-///   - v1.0.4 clone by 2023.02.14: https://github.com/andersonpereiradossantos/dotnet-exif-photo-reader
-/// </summary>
+// Base design used exifEditor: https://1drv.ms/u/s!AmsqTf3EgmJAoZdvU1tuW0xXWl-LTA by https://happybono.wordpress.com/
+// The code of ExifPhotoReader was modified at my own discretion.
+//   - v1.0.4 clone by 2023.02.14: https://github.com/andersonpereiradossantos/dotnet-exif-photo-reader
+
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;

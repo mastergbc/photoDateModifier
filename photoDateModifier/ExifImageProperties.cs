@@ -157,4 +157,110 @@ namespace ExifPhotoReader
         public string LensModel { get; set; }
         public string LensSerialNumber { get; set; }
     }
+
+    public class IptcImageProperties : IDisposable
+    {
+        private readonly System.ComponentModel.IContainer components = new System.ComponentModel.Container();
+        private bool disposedValue;
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    components.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        ~IptcImageProperties()
+        {
+        }
+
+        [Display(Name = "CharacterSet")]
+        public string CharacterSet { get; set; }
+
+        [Display(Name = "RecordVersion")]
+        public int RecordVersion { get; set; }
+
+        [Display(Name = "Byline")]
+        public string Byline { get; set; }
+
+        [Display(Name = "DigitizationDate")]
+        public DateTime DigitizationDate { get; set; }
+
+        [Display(Name = "DigitizationTime")]
+        public TimeSpan DigitizationTime { get; set; }
+
+        [Display(Name = "DateCreated")]
+        public DateTime DateCreated { get; set; }
+
+        [Display(Name = "Caption")]
+        public string Caption { get; set; }
+
+        [Display(Name = "Copyright")]
+        public string Copyright { get; set; }
+
+        [Display(Name = "Keywords")]
+        public string Keywords { get; set; }
+    }
+
+    public class XmpImageProperties : IDisposable
+    {
+        private readonly System.ComponentModel.IContainer components = new System.ComponentModel.Container();
+        private bool disposedValue;
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    components.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        ~XmpImageProperties()
+        {
+        }
+
+        [Display(Name = "DateCreated")]
+        public DateTime DateCreated { get; set; }
+
+        [Display(Name = "ModifyDate")]
+        public DateTime ModifyDate { get; set; }
+
+        [Display(Name = "CreateDate")]
+        public DateTime CreateDate { get; set; }
+
+        [Display(Name = "Creator")]
+        public string Creator { get; set; }
+
+        [Display(Name = "Rights")]
+        public string Rights { get; set; }
+
+        [Display(Name = "Description")]
+        public string Description { get; set; }
+
+        [Display(Name = "Subject")]
+        public string Subject { get; set; }
+    }
 }

@@ -447,25 +447,26 @@ namespace photoDateModifier
         /// </returns>
         public bool TrySetFileNameDateTime()
         {
-            string pattern = @"_(\d{8})_(\d{6})";
-            Match match = Regex.Match(this.fileName, pattern);
+            // 첫 번째 패턴: "IMG_20130812_121532.jpg" 혹은 "20130812_121532.jpg"
+            string pattern1 = @"(\d{8})_(\d{6})";
+            // 두 번째 패턴: "IMG_20130102_1.jpg" (시간 부분이 누락될 수 있음)
+            string pattern2 = @"(\d{8})_(\d*)";
+
+            Match match = Regex.Match(this.fileName, pattern1);
             if (match.Success)
             {
-                string dateString = match.Groups[1].Value;
-                string timeString = match.Groups[2].Value;
-                DateTime.TryParseExact(dateString + timeString, "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime);
-                this.fileNameDateTime = dateTime;
-                if (DateTimeValidator(fileNameDateTime))
-                {
-                    return true;
-                }
-                else
-                {
-                    Console.WriteLine("Parsing fail. Date not found in file name.");
-                    return false;
-                }
+                return TryParseDateTime(match.Groups[1].Value, match.Groups[2].Value);
             }
-            else if (TryConvertToDateTime(this.fileName, out DateTime dateTime))
+
+            match = Regex.Match(this.fileName, pattern2);
+            if (match.Success)
+            {
+                string timeString = "235959";
+
+                return TryParseDateTime(match.Groups[1].Value, timeString);
+            }
+
+            if (TryConvertToDateTime(this.fileName, out DateTime dateTime))
             {
                 this.fileNameDateTime = dateTime;
                 if (DateTimeValidator(fileNameDateTime))
@@ -474,15 +475,29 @@ namespace photoDateModifier
                 }
                 else
                 {
-                    Console.WriteLine("Parsing fail. Date not found in file name.");
+                    Console.WriteLine("TrySetFileNameDateTime: Parsing fail. Date not found in file name. %s", fileNameDateTime.ToString());
                     return false;
                 }
             }
             else
             {
-                Console.WriteLine("Date not found in file name.");
+                Console.WriteLine("TrySetFileNameDateTime: Date not found in file name.");
             }
             return false;
+        }
+
+        private bool TryParseDateTime(string dateString, string timeString)
+        {
+            if (DateTime.TryParseExact(dateString + timeString, "yyyyMMddHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dateTime))
+            {
+                this.fileNameDateTime = dateTime;
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("TryParseDateTime: Parsing fail. " + dateString);
+                return false;
+            }
         }
 
         /// <summary>

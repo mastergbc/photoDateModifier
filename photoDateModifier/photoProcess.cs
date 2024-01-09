@@ -10,13 +10,14 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using SubWapper;
+using Exiv2Wrapper;
 
 namespace photoDateModifier
 {
     public partial class mainDlg : Form, IDisposable
     {
         ConcurrentDictionary<int, MetadataModifyLog> jsonList;
+        private Exiv2Wrapper exiv2Wrapper;
 
         private async void ProcessImages(List<string> fileNamesList)
         {
@@ -104,6 +105,7 @@ namespace photoDateModifier
             Cursor = Cursors.WaitCursor;
             try
             {
+                exiv2Wrapper = new Exiv2Wrapper();
                 m_currImageFileTemp = Path.GetTempPath() + "__exifEditor__" + Path.GetRandomFileName();
                 File.Copy(m_currImageFile, m_currImageFileTemp, false); // set overwrite to false to preserve file attributes
                 m_listViewProperties.Items.Clear();
@@ -115,13 +117,8 @@ namespace photoDateModifier
                 m_pBImage.Image = Bitmap.FromFile(m_currImageFileTemp);
                 try
                 {
-                    //Dictionary<string, string> exifDictionary;
-                    using (ExifToolWrapper exifToolWrapper = new ExifToolWrapper(m_currImageFile))
-                    {
-                        string jsonString = exifToolWrapper.Start();
-                        var exifDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>[]>(jsonString)[0];
-                    }
-                    // exifDictionary 까지 deserialize는 했는데... 이걸 ImageMetadata 에 얹는 건 어떻게 한다?...
+                    exiv2Wrapper.ReadMetadata(m_currImageFileTemp);
+                    PrintMetadata(exiv2Wrapper);
 
                     using (ExifImageProperties exifImage = ExifPhoto.GetExifDataPhoto(m_currImageFileTemp))
                     {
@@ -141,6 +138,69 @@ namespace photoDateModifier
             catch (Exception excep)
             {
                 MessageBox.Show($"Error LoadCurrImage[{m_currImageFile}]: {excep.Message}");
+            }
+        }
+
+        public static void ReadMetadata(Exiv2Wrapper exiv2Wrapper)
+        {
+            ExifImageProperties exifImageProperties = new ExifImageProperties();
+            IptcImageProperties iptcImageProperties = new IptcImageProperties();
+            XmpImageProperties xmpImageProperties = new XmpImageProperties();
+
+            var metadataDictionary = exiv2Wrapper.GetAllMetadata();
+            foreach (var metadata in metadataDictionary)
+            {
+                //
+            }
+        }
+
+        public static void WriteMetadata(Exiv2Wrapper exiv2Wrapper)
+        {
+            ExifImageProperties exifImageProperties = new ExifImageProperties();
+            IptcImageProperties iptcImageProperties = new IptcImageProperties();
+            XmpImageProperties xmpImageProperties = new XmpImageProperties();
+
+            var metadataDictionary = exiv2Wrapper.GetAllMetadata();
+            foreach (var metadata in metadataDictionary)
+            {
+                //
+            }
+
+            // write meta test
+            metadataDictionary["Exif.Image.Artist"] = "포스X아티스트; 윈10만든이";
+            metadataDictionary["Exif.Image.Copyright"] = "윈10저작권,포스X저작권";
+            metadataDictionary["Exif.Image.ImageDescription"] = "바뀐, 설명, Exif.Image.ImageDescription";
+            metadataDictionary["Exif.Photo.UserComment"] = "charset=Unicode 코멘트, Exif.Photo.UserComment";
+            metadataDictionary["Iptc.Application2.Caption"] = "Win10 제목, Iptc.Application2.Caption";
+            metadataDictionary["Xmp.dc.description"] = "lang=\"x-default\" Win10 제목, Xmp.dc.description";
+            metadataDictionary["Xmp.dc.subject"] = "바뀐, 제목, Xmp.dc.subject";
+
+            exiv2Wrapper.WriteMetadata(metadataDictionary);
+        }
+
+        public static void PrintMetadata(Exiv2Wrapper exiv2Wrapper)
+        {
+            var metadataDictionary = exiv2Wrapper.GetAllMetadata();
+            foreach (var metadata in metadataDictionary)
+            {
+                Console.WriteLine($"{metadata.Key}: {metadata.Value}");
+            }
+
+            // write meta test
+            metadataDictionary["Exif.Image.Artist"] = "포스X아티스트; 윈10만든이";
+            metadataDictionary["Exif.Image.Copyright"] = "윈10저작권,포스X저작권";
+            metadataDictionary["Exif.Image.ImageDescription"] = "바뀐, 설명, Exif.Image.ImageDescription";
+            metadataDictionary["Exif.Photo.UserComment"] = "charset=Unicode 코멘트, Exif.Photo.UserComment";
+            metadataDictionary["Iptc.Application2.Caption"] = "Win10 제목, Iptc.Application2.Caption";
+            metadataDictionary["Xmp.dc.description"] = "lang=\"x-default\" Win10 제목, Xmp.dc.description";
+            metadataDictionary["Xmp.dc.subject"] = "바뀐, 제목, Xmp.dc.subject";
+
+            exiv2Wrapper.WriteMetadata(metadataDictionary);
+
+            metadataDictionary = exiv2Wrapper.GetAllMetadata();
+            foreach (var metadata in metadataDictionary)
+            {
+                Console.WriteLine($"→ changed: {metadata.Key}: {metadata.Value}");
             }
         }
 
